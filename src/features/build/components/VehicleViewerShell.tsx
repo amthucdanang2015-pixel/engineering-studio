@@ -18,7 +18,8 @@ import { useVehicleStore, getPartByMeshName, VEHICLE_PARTS_DATA } from "@/core/s
 import { getVehicleCatalogItem } from "@/core/domain/vehicleCatalog";
 import { PartInspectorPanel } from "./PartInspectorPanel";
 import { AssemblyTreePanel } from "./AssemblyTreePanel";
-import { GarageView } from "@/features/garage/components/GarageView";
+import { BuildCatalogView } from "./BuildCatalogView";
+import { TopNav } from "@/components/TopNav";
 import { getSavedVehicleBuilds, saveVehicleBuild, type SavedVehicleBuild } from "@/core/state/savedBuilds";
 import type { PartMaterialConfig } from "@/core/domain/vehicle";
 
@@ -38,6 +39,15 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [notification, setNotification] = useState<string | null>(null);
+  const [isSaved, setIsSaved] = useState(false);
+  const [currentBuildId, setCurrentBuildId] = useState<string | null>(buildIdParam);
+
+  // Sync currentBuildId when buildIdParam changes
+  useEffect(() => {
+    if (buildIdParam) {
+      setCurrentBuildId(buildIdParam);
+    }
+  }, [buildIdParam]);
 
   // Mobile drawer state
   const [mobileDrawer, setMobileDrawer] = useState<"none" | "components" | "inspector">("none");
@@ -125,7 +135,11 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
 
   // ── Save to Garage action ────────────────────
   const handleSaveToGarage = () => {
-    const buildId = buildIdParam || `custom-${activeCatalogItem.id}-${Date.now()}`;
+    const buildId = currentBuildId || buildIdParam || `custom-${activeCatalogItem.id}-${Date.now()}`;
+    if (!currentBuildId) {
+      setCurrentBuildId(buildId);
+    }
+
     const newBuild: SavedVehicleBuild = {
       id: buildId,
       baseVehicleId: activeCatalogItem.id,
@@ -141,9 +155,17 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
 
     saveVehicleBuild(newBuild);
     setNotification("Build saved to Garage!");
+    setIsSaved(true);
+
+    // Revert button state after 2 seconds
     setTimeout(() => {
-      router.push("/garage");
-    }, 900);
+      setIsSaved(false);
+    }, 2000);
+
+    // Clear toast notification after 2.5s
+    setTimeout(() => {
+      setNotification(null);
+    }, 2500);
   };
 
   // ── Discard action ───────────────────────────
@@ -195,8 +217,11 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
           </div>
         </div>
 
+        {/* Center: Top Navigation */}
+        <TopNav />
+
         {/* Right: active component pill */}
-        {selectedPart && (
+        {selectedPart ? (
           <div className="flex items-center gap-2 bg-white border border-[#e8e2d5] rounded-full px-3 py-1 shadow-sm">
             <span className="h-2 w-2 rounded-full bg-[#e0564d]" />
             <span className="text-[11px] font-bold text-stone-800 truncate max-w-[160px]">{selectedPart.name}</span>
@@ -208,6 +233,8 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
               <X size={12} />
             </button>
           </div>
+        ) : (
+          <div className="w-[120px] hidden sm:block" />
         )}
       </header>
 
@@ -259,6 +286,7 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
             onUpdateMaterial={handleUpdateMaterial}
             onSave={handleSaveToGarage}
             onDiscard={handleDiscard}
+            isSaved={isSaved}
           />
         </aside>
       </main>
@@ -268,7 +296,7 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
         <button
           type="button"
           onClick={() => setMobileDrawer(mobileDrawer === "components" ? "none" : "components")}
-          className={`flex-1 flex items-center justify-center gap-2 py-30 text-xs font-bold transition-colors ${mobileDrawer === "components"
+          className={`flex-1 flex items-center justify-center gap-2 py-3 text-xs font-bold transition-colors ${mobileDrawer === "components"
             ? "text-[#e0564d] bg-[#fef2f2]"
             : "text-stone-600 hover:text-stone-900"
             }`}
@@ -310,6 +338,7 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
                 onUpdateMaterial={handleUpdateMaterial}
                 onSave={handleSaveToGarage}
                 onDiscard={handleDiscard}
+                isSaved={isSaved}
               />
             )}
           </div>
@@ -348,7 +377,7 @@ function VehicleViewerContent() {
   const vehicleParam = searchParams.get("vehicle");
 
   if (!vehicleParam) {
-    return <GarageView />;
+    return <BuildCatalogView />;
   }
 
   return <BuildWorkspaceContent vehicleParam={vehicleParam} />;
@@ -373,3 +402,4 @@ export const VehicleViewerShell: React.FC = () => {
     </Suspense>
   );
 };
+

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { X, Paintbrush, Zap, Lightbulb, Box, RotateCcw, Save } from "lucide-react";
+import { X, Paintbrush, Zap, Lightbulb, Box, RotateCcw, Save, CheckCircle2 } from "lucide-react";
 import { useVehicleStore } from "@/core/state/useVehicleStore";
 import { PresetColorPalette } from "./PresetColorPalette";
 
@@ -12,12 +12,14 @@ interface PartInspectorPanelProps {
   ) => void;
   onSave?: () => void;
   onDiscard?: () => void;
+  isSaved?: boolean;
 }
 
 export const PartInspectorPanel: React.FC<PartInspectorPanelProps> = ({
   onUpdateMaterial,
   onSave,
   onDiscard,
+  isSaved = false,
 }) => {
   const { selectedPart, selectedMeshName, setSelectedMesh, materialOverrides, updatePartMaterial } =
     useVehicleStore();
@@ -56,10 +58,14 @@ export const PartInspectorPanel: React.FC<PartInspectorPanelProps> = ({
           <button
             type="button"
             onClick={onSave}
-            className="flex-1 py-2.5 px-3 rounded-xl bg-[#e0564d] hover:bg-[#c9463e] text-white font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 active:scale-[0.98]"
+            className={
+              isSaved
+                ? "flex-1 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 active:scale-[0.98]"
+                : "flex-1 py-2.5 px-3 rounded-xl bg-[#e0564d] hover:bg-[#c9463e] text-white font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 active:scale-[0.98]"
+            }
           >
-            <Save size={13} />
-            <span>Save to Garage</span>
+            {isSaved ? <CheckCircle2 size={13} /> : <Save size={13} />}
+            <span>{isSaved ? "Saved" : "Save to Garage"}</span>
           </button>
         </div>
       </div>
@@ -232,12 +238,17 @@ export const PartInspectorPanel: React.FC<PartInspectorPanelProps> = ({
         <button
           type="button"
           onClick={onSave}
-          className="flex-1 py-2.5 px-3 rounded-xl bg-[#e0564d] hover:bg-[#c9463e] text-white font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 active:scale-[0.98]"
+          className={
+            isSaved
+              ? "flex-1 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 active:scale-[0.98]"
+              : "flex-1 py-2.5 px-3 rounded-xl bg-[#e0564d] hover:bg-[#c9463e] text-white font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 active:scale-[0.98]"
+          }
         >
-          <Save size={13} />
-          <span>Save to Garage</span>
+          {isSaved ? <CheckCircle2 size={13} /> : <Save size={13} />}
+          <span>{isSaved ? "Saved" : "Save to Garage"}</span>
         </button>
       </div>
     </div>
   );
 };
+
