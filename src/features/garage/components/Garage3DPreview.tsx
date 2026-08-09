@@ -3,13 +3,19 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AnatomyViewer } from "@/viewer/AnatomyViewer";
 import { Box } from "lucide-react";
+import type { PartMaterialConfig } from "@/core/domain/vehicle";
 
 interface Garage3DPreviewProps {
   modelPath: string;
   vehicleName: string;
+  materialOverrides?: Record<string, Partial<PartMaterialConfig>>;
 }
 
-export const Garage3DPreview: React.FC<Garage3DPreviewProps> = ({ modelPath, vehicleName }) => {
+export const Garage3DPreview: React.FC<Garage3DPreviewProps> = ({
+  modelPath,
+  vehicleName,
+  materialOverrides,
+}) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<AnatomyViewer | null>(null);
 
@@ -40,6 +46,15 @@ export const Garage3DPreview: React.FC<Garage3DPreviewProps> = ({ modelPath, veh
       viewer.dispose();
     };
   }, [modelPath]);
+
+  // Re-apply material overrides after viewer finishes loading model or overrides change
+  useEffect(() => {
+    if (!loading && viewerRef.current && materialOverrides) {
+      Object.entries(materialOverrides).forEach(([meshName, config]) => {
+        viewerRef.current?.updateMaterial(meshName, config);
+      });
+    }
+  }, [loading, modelPath, materialOverrides]);
 
   return (
     <div className="relative h-full w-full rounded-2xl overflow-hidden bg-slate-900/5 border border-slate-200 esf-grid-bg">
