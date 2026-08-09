@@ -94,8 +94,9 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
     };
   }, [activeCatalogItem.modelPath]);
 
-  // ── Sync buildId searchParam / Initial overrides ──
+  // ── Sync buildId / vehicle searchParam / Initial overrides ──
   useEffect(() => {
+    setSelectedMesh(null);
     if (buildIdParam) {
       const savedBuilds = getSavedVehicleBuilds();
       const existing = savedBuilds.find((b) => b.id === buildIdParam);
@@ -108,7 +109,7 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
     // If no buildId param, initialize empty overrides baseline
     setMaterialOverrides({});
     savedOverridesRef.current = {};
-  }, [buildIdParam]);
+  }, [buildIdParam, vehicleParam, setSelectedMesh, setMaterialOverrides]);
 
   const isDirty = isOverridesDirty(materialOverrides, savedOverridesRef.current);
 
