@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { VEHICLE_CATALOG, type VehicleCatalogItem } from "@/core/domain/vehicleCatalog";
 import { Garage3DPreview } from "@/features/garage/components/Garage3DPreview";
-import { TopNav } from "@/components/TopNav";
+import { Navbar } from "@/components/layout/Navbar";
 
 export const BuildCatalogView: React.FC = () => {
   const router = useRouter();
@@ -46,8 +46,9 @@ export const BuildCatalogView: React.FC = () => {
         </div>
 
         {/* Top Navigation */}
-        <TopNav />
+        <Navbar />
       </header>
+
 
       {/* Main Workspace Layout */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">

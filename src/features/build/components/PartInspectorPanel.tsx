@@ -13,6 +13,7 @@ interface PartInspectorPanelProps {
   onSave?: () => void;
   onDiscard?: () => void;
   isSaved?: boolean;
+  isDirty?: boolean;
 }
 
 export const PartInspectorPanel: React.FC<PartInspectorPanelProps> = ({
@@ -20,9 +21,44 @@ export const PartInspectorPanel: React.FC<PartInspectorPanelProps> = ({
   onSave,
   onDiscard,
   isSaved = false,
+  isDirty = false,
 }) => {
   const { selectedPart, selectedMeshName, setSelectedMesh, materialOverrides, updatePartMaterial } =
     useVehicleStore();
+
+  // ── Action Footer buttons helper ──
+  const renderActionFooter = () => (
+    <div className="shrink-0 p-3.5 border-t border-[#e8e2d5] bg-[#f7f4ed] flex items-center gap-2.5 z-10">
+      <button
+        type="button"
+        onClick={onDiscard}
+        disabled={!isDirty}
+        className={
+          isDirty
+            ? "flex-1 py-2.5 px-3 rounded-xl border border-stone-300 bg-white text-stone-700 font-bold text-xs hover:bg-stone-50 hover:border-stone-400 transition-all shadow-2xs flex items-center justify-center gap-1.5 active:scale-[0.98] cursor-pointer"
+            : "flex-1 py-2.5 px-3 rounded-xl border border-stone-200 bg-stone-100 text-stone-400 font-bold text-xs flex items-center justify-center gap-1.5 opacity-60 cursor-not-allowed"
+        }
+      >
+        <RotateCcw size={13} className={isDirty ? "text-stone-500" : "text-stone-400"} />
+        <span>Discard</span>
+      </button>
+      <button
+        type="button"
+        onClick={onSave}
+        disabled={!isDirty && !isSaved}
+        className={
+          isSaved
+            ? "flex-1 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 active:scale-[0.98] cursor-pointer"
+            : isDirty
+            ? "flex-1 py-2.5 px-3 rounded-xl bg-[#e0564d] hover:bg-[#c9463e] text-white font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 active:scale-[0.98] cursor-pointer"
+            : "flex-1 py-2.5 px-3 rounded-xl bg-stone-300 text-stone-500 font-bold text-xs flex items-center justify-center gap-1.5 opacity-60 cursor-not-allowed"
+        }
+      >
+        {isSaved ? <CheckCircle2 size={13} /> : <Save size={13} />}
+        <span>{isSaved ? "Saved" : "Save to Garage"}</span>
+      </button>
+    </div>
+  );
 
   // ── Empty state ─────────────────────────────
   if (!selectedPart || !selectedMeshName) {
@@ -45,29 +81,8 @@ export const PartInspectorPanel: React.FC<PartInspectorPanelProps> = ({
           </p>
         </div>
 
-        {/* Action Footer: Discard & Save to Garage */}
-        <div className="shrink-0 p-3.5 border-t border-[#e8e2d5] bg-[#f7f4ed] flex items-center gap-2.5 z-10">
-          <button
-            type="button"
-            onClick={onDiscard}
-            className="flex-1 py-2.5 px-3 rounded-xl border border-stone-300 bg-white text-stone-700 font-bold text-xs hover:bg-stone-50 hover:border-stone-400 transition-all shadow-2xs flex items-center justify-center gap-1.5 active:scale-[0.98]"
-          >
-            <RotateCcw size={13} className="text-stone-500" />
-            <span>Discard</span>
-          </button>
-          <button
-            type="button"
-            onClick={onSave}
-            className={
-              isSaved
-                ? "flex-1 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 active:scale-[0.98]"
-                : "flex-1 py-2.5 px-3 rounded-xl bg-[#e0564d] hover:bg-[#c9463e] text-white font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 active:scale-[0.98]"
-            }
-          >
-            {isSaved ? <CheckCircle2 size={13} /> : <Save size={13} />}
-            <span>{isSaved ? "Saved" : "Save to Garage"}</span>
-          </button>
-        </div>
+        {/* Action Footer */}
+        {renderActionFooter()}
       </div>
     );
   }
@@ -225,30 +240,10 @@ export const PartInspectorPanel: React.FC<PartInspectorPanelProps> = ({
         </div>
       </div>
 
-      {/* Action Footer: Discard & Save to Garage */}
-      <div className="shrink-0 p-3.5 border-t border-[#e8e2d5] bg-[#f7f4ed] flex items-center gap-2.5 z-10">
-        <button
-          type="button"
-          onClick={onDiscard}
-          className="flex-1 py-2.5 px-3 rounded-xl border border-stone-300 bg-white text-stone-700 font-bold text-xs hover:bg-stone-50 hover:border-stone-400 transition-all shadow-2xs flex items-center justify-center gap-1.5 active:scale-[0.98]"
-        >
-          <RotateCcw size={13} className="text-stone-500" />
-          <span>Discard</span>
-        </button>
-        <button
-          type="button"
-          onClick={onSave}
-          className={
-            isSaved
-              ? "flex-1 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 active:scale-[0.98]"
-              : "flex-1 py-2.5 px-3 rounded-xl bg-[#e0564d] hover:bg-[#c9463e] text-white font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 active:scale-[0.98]"
-          }
-        >
-          {isSaved ? <CheckCircle2 size={13} /> : <Save size={13} />}
-          <span>{isSaved ? "Saved" : "Save to Garage"}</span>
-        </button>
-      </div>
+      {/* Action Footer */}
+      {renderActionFooter()}
     </div>
   );
 };
+
 

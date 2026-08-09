@@ -3,7 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { Gauge, Wind, Activity, Zap, Car, ArrowRight } from "lucide-react";
-import { TopNav } from "@/components/TopNav";
+import { Navbar } from "@/components/layout/Navbar";
 
 export const TestView: React.FC = () => {
   const router = useRouter();
@@ -29,8 +29,9 @@ export const TestView: React.FC = () => {
         </div>
 
         {/* Top Navigation */}
-        <TopNav />
+        <Navbar />
       </header>
+
 
       {/* Main Workspace Content */}
       <div className="flex-1 flex flex-col justify-center items-center my-6">

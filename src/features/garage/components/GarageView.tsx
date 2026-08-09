@@ -16,7 +16,7 @@ import {
 import { getVehicleCatalogItem } from "@/core/domain/vehicleCatalog";
 import { Garage3DPreview } from "./Garage3DPreview";
 import { getSavedVehicleBuilds, deleteSavedVehicleBuild, type SavedVehicleBuild } from "@/core/state/savedBuilds";
-import { TopNav } from "@/components/TopNav";
+import { Navbar } from "@/components/layout/Navbar";
 
 export const GarageView: React.FC = () => {
   const router = useRouter();
@@ -68,8 +68,9 @@ export const GarageView: React.FC = () => {
         </div>
 
         {/* Top Navigation */}
-        <TopNav />
+        <Navbar />
       </header>
+
 
       {/* Main Workspace Layout */}
       {savedBuilds.length > 0 && selectedBuild && selectedBaseVehicle ? (

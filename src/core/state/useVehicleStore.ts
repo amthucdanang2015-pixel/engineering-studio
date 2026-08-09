@@ -340,3 +340,37 @@ export const useVehicleStore = create<VehicleState>((set) => ({
   setAutoRotate: (enabled) => set({ autoRotate: enabled }),
   setPresetView: (preset) => set({ activeViewPreset: preset }),
 }));
+
+function areConfigsEqual(
+  c1: Partial<PartMaterialConfig> = {},
+  c2: Partial<PartMaterialConfig> = {}
+): boolean {
+  const keys: (keyof PartMaterialConfig)[] = [
+    "color",
+    "roughness",
+    "metalness",
+    "opacity",
+    "transparent",
+    "wireframe",
+  ];
+  for (const k of keys) {
+    if (c1[k] !== c2[k]) return false;
+  }
+  return true;
+}
+
+export function isOverridesDirty(
+  current: Record<string, Partial<PartMaterialConfig>> = {},
+  saved: Record<string, Partial<PartMaterialConfig>> = {}
+): boolean {
+  const allMeshNames = Array.from(
+    new Set([...Object.keys(current), ...Object.keys(saved)])
+  );
+  for (const meshName of allMeshNames) {
+    if (!areConfigsEqual(current[meshName], saved[meshName])) {
+      return true;
+    }
+  }
+  return false;
+}
+

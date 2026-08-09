@@ -14,12 +14,12 @@ import {
   ZoomOut,
 } from "lucide-react";
 import { AnatomyViewer } from "@/viewer/AnatomyViewer";
-import { useVehicleStore, getPartByMeshName, VEHICLE_PARTS_DATA } from "@/core/state/useVehicleStore";
+import { useVehicleStore, getPartByMeshName, VEHICLE_PARTS_DATA, isOverridesDirty } from "@/core/state/useVehicleStore";
 import { getVehicleCatalogItem } from "@/core/domain/vehicleCatalog";
 import { PartInspectorPanel } from "./PartInspectorPanel";
 import { AssemblyTreePanel } from "./AssemblyTreePanel";
 import { BuildCatalogView } from "./BuildCatalogView";
-import { TopNav } from "@/components/TopNav";
+import { Navbar } from "@/components/layout/Navbar";
 import { getSavedVehicleBuilds, saveVehicleBuild, type SavedVehicleBuild } from "@/core/state/savedBuilds";
 import type { PartMaterialConfig } from "@/core/domain/vehicle";
 
@@ -63,7 +63,7 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
   } = useVehicleStore();
 
   const hoveredPart = getPartByMeshName(hoveredMeshName);
-  const initialOverridesRef = useRef<Record<string, Partial<PartMaterialConfig>>>({});
+  const savedOverridesRef = useRef<Record<string, Partial<PartMaterialConfig>>>({});
 
   // ── Init viewer ──────────────────────────────
   useEffect(() => {
@@ -101,13 +101,16 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
       const existing = savedBuilds.find((b) => b.id === buildIdParam);
       if (existing && existing.materialOverrides) {
         setMaterialOverrides(existing.materialOverrides);
-        initialOverridesRef.current = { ...existing.materialOverrides };
+        savedOverridesRef.current = { ...existing.materialOverrides };
         return;
       }
     }
-    // If no buildId param, save current store state as session initial
-    initialOverridesRef.current = { ...materialOverrides };
+    // If no buildId param, initialize empty overrides baseline
+    setMaterialOverrides({});
+    savedOverridesRef.current = {};
   }, [buildIdParam]);
+
+  const isDirty = isOverridesDirty(materialOverrides, savedOverridesRef.current);
 
   // ── Sync panel → viewer selection ────────────
   useEffect(() => {
@@ -154,6 +157,7 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
     };
 
     saveVehicleBuild(newBuild);
+    savedOverridesRef.current = { ...materialOverrides };
     setNotification("Build saved to Garage!");
     setIsSaved(true);
 
@@ -170,13 +174,13 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
 
   // ── Discard action ───────────────────────────
   const handleDiscard = () => {
-    const initial = initialOverridesRef.current;
-    setMaterialOverrides(initial);
+    const saved = savedOverridesRef.current;
+    setMaterialOverrides(saved);
 
     // Revert all parts on 3D viewer live
     if (viewerRef.current) {
       VEHICLE_PARTS_DATA.forEach((part) => {
-        const override = initial[part.meshName] ?? part.defaultMaterial;
+        const override = saved[part.meshName] ?? part.defaultMaterial;
         viewerRef.current?.updateMaterial(part.meshName, override);
       });
     }
@@ -218,7 +222,7 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
         </div>
 
         {/* Center: Top Navigation */}
-        <TopNav />
+        <Navbar />
 
         {/* Right: active component pill */}
         {selectedPart ? (
@@ -287,6 +291,7 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
             onSave={handleSaveToGarage}
             onDiscard={handleDiscard}
             isSaved={isSaved}
+            isDirty={isDirty}
           />
         </aside>
       </main>
@@ -339,6 +344,7 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
                 onSave={handleSaveToGarage}
                 onDiscard={handleDiscard}
                 isSaved={isSaved}
+                isDirty={isDirty}
               />
             )}
           </div>
