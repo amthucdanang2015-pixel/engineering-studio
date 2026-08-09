@@ -80,6 +80,7 @@ export const GarageView: React.FC = () => {
             <div className="lg:col-span-8 h-[400px] sm:h-[480px] lg:h-[540px] relative rounded-3xl overflow-hidden esf-panel p-2 bg-white border border-slate-200 shadow-sm flex flex-col">
               <div className="flex-1 w-full h-full relative">
                 <Garage3DPreview
+                  buildId={selectedBuild.id}
                   modelPath={selectedBaseVehicle.modelPath}
                   vehicleName={selectedBuild.name}
                   materialOverrides={selectedBuild.materialOverrides}

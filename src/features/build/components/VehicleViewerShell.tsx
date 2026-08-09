@@ -205,7 +205,7 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
 
       {/* ── HEADER ───────────────────────────────── */}
       <header style={{ height: "56px", minHeight: "56px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", borderBottom: "1px solid #e8e2d5", background: "#f7f4ed", zIndex: 30 }}>
-        {/* Left: back button + vehicle name */}
+        {/* Left: back button + vehicle name + active component pill */}
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -219,27 +219,24 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
             <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Build Workspace</span>
             <h1 className="text-sm font-extrabold text-stone-900 leading-tight">{activeCatalogItem.name}</h1>
           </div>
+
+          {selectedPart && (
+            <div className="flex items-center gap-2 bg-white border border-[#e8e2d5] rounded-full px-3 py-1 shadow-sm ml-2">
+              <span className="h-2 w-2 rounded-full bg-[#e0564d]" />
+              <span className="text-[11px] font-bold text-stone-800 truncate max-w-[160px]">{selectedPart.name}</span>
+              <button
+                type="button"
+                onClick={() => setSelectedMesh(null)}
+                className="text-stone-400 hover:text-stone-700 transition-colors ml-1"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Center: Top Navigation */}
+        {/* Right: Top Navigation */}
         <Navbar />
-
-        {/* Right: active component pill */}
-        {selectedPart ? (
-          <div className="flex items-center gap-2 bg-white border border-[#e8e2d5] rounded-full px-3 py-1 shadow-sm">
-            <span className="h-2 w-2 rounded-full bg-[#e0564d]" />
-            <span className="text-[11px] font-bold text-stone-800 truncate max-w-[160px]">{selectedPart.name}</span>
-            <button
-              type="button"
-              onClick={() => setSelectedMesh(null)}
-              className="text-stone-400 hover:text-stone-700 transition-colors ml-1"
-            >
-              <X size={12} />
-            </button>
-          </div>
-        ) : (
-          <div className="w-[120px] hidden sm:block" />
-        )}
       </header>
 
       {/* ── MAIN 3-COLUMN LAYOUT ─────────────────── */}

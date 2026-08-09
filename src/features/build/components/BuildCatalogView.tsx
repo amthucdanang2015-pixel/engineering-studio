@@ -55,7 +55,7 @@ export const BuildCatalogView: React.FC = () => {
         {/* Large 3D Vehicle Hero Viewport */}
         <div className="lg:col-span-8 h-[400px] sm:h-[480px] lg:h-[540px] relative rounded-3xl overflow-hidden esf-panel p-2 bg-white border border-slate-200 shadow-sm flex flex-col">
           <div className="flex-1 w-full h-full relative">
-            <Garage3DPreview modelPath={selectedVehicle.modelPath} vehicleName={selectedVehicle.name} />
+            <Garage3DPreview buildId={selectedVehicle.id} modelPath={selectedVehicle.modelPath} vehicleName={selectedVehicle.name} />
 
             {/* Badge overlay on top of 3D preview */}
             <div className="absolute top-4 left-4 z-10 flex items-center gap-2 bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-slate-200 shadow-sm">

@@ -4,14 +4,17 @@ import React, { useEffect, useRef, useState } from "react";
 import { AnatomyViewer } from "@/viewer/AnatomyViewer";
 import { Box } from "lucide-react";
 import type { PartMaterialConfig } from "@/core/domain/vehicle";
+import { VEHICLE_PARTS_DATA } from "@/core/state/useVehicleStore";
 
 interface Garage3DPreviewProps {
+  buildId: string;
   modelPath: string;
   vehicleName: string;
   materialOverrides?: Record<string, Partial<PartMaterialConfig>>;
 }
 
 export const Garage3DPreview: React.FC<Garage3DPreviewProps> = ({
+  buildId,
   modelPath,
   vehicleName,
   materialOverrides,
@@ -22,6 +25,11 @@ export const Garage3DPreview: React.FC<Garage3DPreviewProps> = ({
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
 
+  // Active build ID ref to cancel stale async load callbacks
+  const activeBuildIdRef = useRef<string>(buildId);
+  activeBuildIdRef.current = buildId;
+
+  // ── 1. Create AnatomyViewer once on mount ──────────
   useEffect(() => {
     if (!mountRef.current) return;
 
@@ -36,25 +44,47 @@ export const Garage3DPreview: React.FC<Garage3DPreviewProps> = ({
     viewerRef.current = viewer;
     viewer.setAutoRotate(true);
 
-    viewer.setVehicleModel(modelPath).catch(() => {
-      setLoading(false);
-      setProgress(0);
-    });
-
     return () => {
       viewerRef.current = null;
       viewer.dispose();
     };
-  }, [modelPath]);
+  }, []);
 
-  // Re-apply material overrides after viewer finishes loading model or overrides change
+  // ── 2. Sync vehicle model & material overrides on buildId / modelPath change ──
   useEffect(() => {
-    if (!loading && viewerRef.current && materialOverrides) {
-      Object.entries(materialOverrides).forEach(([meshName, config]) => {
-        viewerRef.current?.updateMaterial(meshName, config);
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+
+    const targetBuildId = buildId;
+    setLoading(true);
+    setProgress(0);
+
+    viewer
+      .setVehicleModel(modelPath)
+      .then(() => {
+        // Guard against race conditions: ignore if user selected another build while loading
+        if (activeBuildIdRef.current !== targetBuildId) return;
+
+        // Reset all parts to default materials to ensure clean state
+        VEHICLE_PARTS_DATA.forEach((part) => {
+          viewer.updateMaterial(part.meshName, part.defaultMaterial);
+        });
+
+        // Apply target build's material overrides
+        if (materialOverrides && Object.keys(materialOverrides).length > 0) {
+          Object.entries(materialOverrides).forEach(([meshName, config]) => {
+            viewer.updateMaterial(meshName, config);
+          });
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        if (activeBuildIdRef.current === targetBuildId) {
+          setLoading(false);
+          setProgress(0);
+        }
       });
-    }
-  }, [loading, modelPath, materialOverrides]);
+  }, [buildId, modelPath, materialOverrides]);
 
   return (
     <div className="relative h-full w-full rounded-2xl overflow-hidden bg-slate-900/5 border border-slate-200 esf-grid-bg">
