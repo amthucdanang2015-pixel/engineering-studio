@@ -1,0 +1,11 @@
+import { GarageView } from "@/features/garage/components/GarageView";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Garage — ESF V2 Vehicle Selection",
+  description: "Select and configure your ESF V2 vehicle architecture.",
+};
+
+export default function GaragePage() {
+  return <GarageView />;
+}

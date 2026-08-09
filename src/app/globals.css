@@ -1,0 +1,123 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+@source "../features/build";
+@source "../features/garage";
+@source "../core";
+@source "../app";
+
+:root {
+  --bg-atelier: #f7f4ed;
+  --bg-card: #ffffff;
+  --bg-card-subtle: #fbf9f5;
+  --border-atelier: #e8e2d5;
+  --border-atelier-strong: #d9d2c3;
+  --accent-coral: #e0564d;
+  --accent-coral-hover: #c9463e;
+  --accent-coral-light: #fef2f2;
+  --accent-purple: #7c3aed;
+  --text-primary: #292524;
+  --text-secondary: #78716c;
+  --text-muted: #a8a29e;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-handwriting: 'Caveat', cursive, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-atelier);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-serif-title {
+  font-family: var(--font-serif);
+}
+
+.font-handwriting {
+  font-family: var(--font-handwriting);
+}
+
+/* Atelier Warm Cream Card Panel styling */
+.atelier-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-atelier);
+  border-radius: 24px;
+  box-shadow: 0 4px 20px -4px rgba(41, 37, 36, 0.04), 0 2px 6px -1px rgba(41, 37, 36, 0.02);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.atelier-pill {
+  background: rgba(239, 235, 217, 0.55);
+  border: 1px solid var(--border-atelier);
+  border-radius: 9999px;
+  padding: 4px;
+}
+
+.atelier-button {
+  background: #ffffff;
+  border: 1px solid var(--border-atelier);
+  color: var(--text-primary);
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.atelier-button:hover {
+  background: #fcfbfa;
+  border-color: var(--border-atelier-strong);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.atelier-button.active {
+  background: var(--accent-coral);
+  border-color: var(--accent-coral);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(224, 86, 77, 0.3);
+}
+
+/* Yellow Sticky Note */
+.sticky-note {
+  background-color: #fff9c4;
+  border: 1px solid #fef08a;
+  box-shadow: 0 4px 12px rgba(180, 140, 20, 0.15);
+  transform: rotate(2deg);
+}
+
+/* Interactive Hotspot Pulse */
+@keyframes hotspot-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(224, 86, 77, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(224, 86, 77, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(224, 86, 77, 0);
+  }
+}
+
+.animate-hotspot {
+  animation: hotspot-pulse 2s infinite;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d6cfc4;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a29e;
+}
