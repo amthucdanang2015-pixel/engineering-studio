@@ -11,6 +11,15 @@ export interface LoadedVehicleAsset {
   mixer: THREE.AnimationMixer | null;
 }
 
+interface OriginalMaterialState {
+  colorHex: number;
+  roughness: number;
+  metalness: number;
+  opacity: number;
+  transparent: boolean;
+  wireframe: boolean;
+}
+
 export class AssetManager {
   private loader: GLTFLoader;
   private cache = new Map<string, LoadedVehicleAsset>();
@@ -32,12 +41,32 @@ export class AssetManager {
     void fetch(url, { priority: "low" } as RequestInit).catch(() => {});
   }
 
+  resetMaterials(asset: LoadedVehicleAsset) {
+    asset.meshes.forEach((mesh) => {
+      const orig = mesh.userData.originalMaterial as OriginalMaterialState | undefined;
+      if (orig) {
+        this.forEachMaterial(mesh, (material) => {
+          if (material instanceof THREE.MeshStandardMaterial) {
+            material.color.setHex(orig.colorHex);
+            material.roughness = orig.roughness;
+            material.metalness = orig.metalness;
+            material.opacity = orig.opacity;
+            material.transparent = orig.transparent;
+            material.wireframe = orig.wireframe;
+            material.needsUpdate = true;
+          }
+        });
+      }
+    });
+  }
+
   async load(url: string, onProgress?: (progress: number) => void): Promise<LoadedVehicleAsset> {
     const cached = this.cache.get(url);
     if (cached) {
       this.cache.delete(url);
       this.cache.set(url, cached);
       onProgress?.(1);
+      this.resetMaterials(cached);
       this.current = cached;
       return cached;
     }
@@ -47,6 +76,7 @@ export class AssetManager {
     try {
       const asset = await pending;
       this.cache.set(url, asset);
+      this.resetMaterials(asset);
       this.current = asset;
       return asset;
     } finally {
@@ -62,12 +92,6 @@ export class AssetManager {
     const model = gltf.scene;
 
     // Verified GLB Coordinate System: Model is natively Y-UP!
-    // +Y = vehicle UP (Roof = +1.86m)
-    // -Y = vehicle DOWN (Wheels bottom = +0.20m)
-    // -X = vehicle FRONT (Front Bumper = -2.42m)
-    // +X = vehicle REAR (Rear Deck = +1.35m)
-    // +Z = vehicle LEFT / DRIVER SIDE (+1.00m)
-    // Model rotation is kept untransformed at (0, 0, 0)
     model.rotation.set(0, 0, 0);
     model.updateMatrixWorld(true);
 
@@ -120,6 +144,18 @@ export class AssetManager {
         material.depthWrite = true;
 
         if (material instanceof THREE.MeshStandardMaterial) {
+          // Capture original GLB material properties on mesh userData
+          if (!child.userData.originalMaterial) {
+            child.userData.originalMaterial = {
+              colorHex: material.color.getHex(),
+              roughness: material.roughness,
+              metalness: material.metalness,
+              opacity: material.opacity,
+              transparent: material.transparent,
+              wireframe: material.wireframe,
+            } satisfies OriginalMaterialState;
+          }
+
           material.roughness = THREE.MathUtils.clamp(material.roughness ?? 0.5, 0.1, 0.9);
           material.envMapIntensity = 0.85;
 

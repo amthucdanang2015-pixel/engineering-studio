@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Activity,
   ArrowRight,
@@ -10,16 +10,22 @@ import {
   Gauge,
   Layers,
   Sparkles,
-  User,
   Zap,
 } from "lucide-react";
-import { VEHICLE_CATALOG, type VehicleCatalogItem } from "@/core/domain/vehicleCatalog";
+import { VEHICLE_CATALOG, getVehicleCatalogItem } from "@/core/domain/vehicleCatalog";
 import { Garage3DPreview } from "@/features/garage/components/Garage3DPreview";
 import { Navbar } from "@/components/layout/Navbar";
 
 export const BuildCatalogView: React.FC = () => {
   const router = useRouter();
-  const [selectedVehicle, setSelectedVehicle] = useState<VehicleCatalogItem>(VEHICLE_CATALOG[0]);
+  const searchParams = useSearchParams();
+  const viewParam = searchParams.get("view");
+
+  const selectedVehicle = getVehicleCatalogItem(viewParam);
+
+  const handleSelectVehicle = (vehicleId: string) => {
+    router.replace(`/build?view=${vehicleId}`, { scroll: false });
+  };
 
   const handleStartBuilding = () => {
     router.push(`/build?vehicle=${selectedVehicle.id}`);
@@ -48,7 +54,6 @@ export const BuildCatalogView: React.FC = () => {
         {/* Top Navigation */}
         <Navbar />
       </header>
-
 
       {/* Main Workspace Layout */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
@@ -155,7 +160,7 @@ export const BuildCatalogView: React.FC = () => {
               <button
                 key={vehicle.id}
                 type="button"
-                onClick={() => setSelectedVehicle(vehicle)}
+                onClick={() => handleSelectVehicle(vehicle.id)}
                 className={`text-left p-4 rounded-2xl transition-all border flex items-start gap-4 ${isSelected
                   ? "bg-white border-[#f95738] shadow-md ring-2 ring-[#f95738]/20"
                   : "bg-white/80 hover:bg-white border-slate-200 hover:border-slate-300 shadow-sm"

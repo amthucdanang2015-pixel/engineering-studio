@@ -101,15 +101,17 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
       const savedBuilds = getSavedVehicleBuilds();
       const existing = savedBuilds.find((b) => b.id === buildIdParam);
       if (existing && existing.materialOverrides) {
+        console.log(`[Workspace Init] Vehicle: ${activeCatalogItem.id}, ModelPath: ${activeCatalogItem.modelPath}, Saved Customization: YES (ID: ${existing.id}), Overrides:`, existing.materialOverrides);
         setMaterialOverrides(existing.materialOverrides);
         savedOverridesRef.current = { ...existing.materialOverrides };
         return;
       }
     }
     // If no buildId param, initialize empty overrides baseline
+    console.log(`[Workspace Init] Vehicle: ${activeCatalogItem.id}, ModelPath: ${activeCatalogItem.modelPath}, Saved Customization: NO, Baseline: ORIGINAL GLB`);
     setMaterialOverrides({});
     savedOverridesRef.current = {};
-  }, [buildIdParam, vehicleParam, setSelectedMesh, setMaterialOverrides]);
+  }, [buildIdParam, vehicleParam, activeCatalogItem, setSelectedMesh, setMaterialOverrides]);
 
   const isDirty = isOverridesDirty(materialOverrides, savedOverridesRef.current);
 

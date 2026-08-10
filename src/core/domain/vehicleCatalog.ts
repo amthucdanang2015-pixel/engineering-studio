@@ -63,7 +63,7 @@ export const VEHICLE_CATALOG: VehicleCatalogItem[] = [
     name: "Classic Electric SUV",
     type: "Electric SUV",
     description: "Dual-motor luxury performance electric SUV with active air suspension and high-capacity battery pack.",
-    modelPath: "/models/ESF_V2_Classic_Sports_Car_Demo_ThreeJS_YUp1.glb",
+    modelPath: "/models/ESF_V3_Modern_Daily_Crossover_ThreeJS_YUp.glb",
     screenshotPath: "/images/ESF_V2_Classic_Sports_Car_Demo_ThreeJS_YUp1.png",
     specs: {
       engine: "Dual EV Motors",
