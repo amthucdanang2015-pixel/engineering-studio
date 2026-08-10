@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { ChevronRight, ChevronDown, Car, Cpu, Zap, Box, Disc } from "lucide-react";
-import { useVehicleStore, VEHICLE_PARTS_DATA } from "@/core/state/useVehicleStore";
+import { useVehicleStore, getPartByMeshName, VEHICLE_PARTS_DATA } from "@/core/state/useVehicleStore";
+import type { VehiclePartData } from "@/core/domain/vehicle";
 
 const CATEGORY_META = {
   BODY: { label: "Body", icon: Car, color: "text-[#e0564d]", accent: "bg-[#e0564d]" },
@@ -15,7 +16,7 @@ const CATEGORY_META = {
 const CATEGORIES = ["BODY", "COCKPIT", "POWER", "CHASSIS", "WHEELS"] as const;
 
 export const AssemblyTreePanel: React.FC = () => {
-  const { selectedMeshName, setSelectedMesh } = useVehicleStore();
+  const { selectedMeshName, setSelectedMesh, availableMeshNames } = useVehicleStore();
 
   const [open, setOpen] = useState<Record<string, boolean>>({
     BODY: true,
@@ -26,6 +27,16 @@ export const AssemblyTreePanel: React.FC = () => {
   });
 
   const toggle = (cat: string) => setOpen((prev) => ({ ...prev, [cat]: !prev[cat] }));
+
+  // Dynamically resolve actual loaded GLB mesh names into VehiclePartData objects
+  const activePartsList: VehiclePartData[] = useMemo(() => {
+    if (availableMeshNames && availableMeshNames.length > 0) {
+      return availableMeshNames
+        .map((meshName) => getPartByMeshName(meshName))
+        .filter((part): part is VehiclePartData => part !== null);
+    }
+    return VEHICLE_PARTS_DATA;
+  }, [availableMeshNames]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, background: "#f7f4ed" }}>
@@ -38,7 +49,9 @@ export const AssemblyTreePanel: React.FC = () => {
       {/* Scrollable tree */}
       <div className="flex-1 overflow-y-auto min-h-0 px-3 py-3 space-y-1">
         {CATEGORIES.map((cat) => {
-          const parts = VEHICLE_PARTS_DATA.filter((p) => p.category === cat);
+          const parts = activePartsList.filter((p) => p.category === cat);
+          if (parts.length === 0) return null; // Do not render empty categories
+
           const meta = CATEGORY_META[cat];
           const Icon = meta.icon;
           const isOpen = open[cat] ?? true;

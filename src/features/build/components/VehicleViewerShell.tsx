@@ -60,6 +60,7 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
     hoveredMeshName,
     materialOverrides,
     setMaterialOverrides,
+    setAvailableMeshNames,
   } = useVehicleStore();
 
   const hoveredPart = getPartByMeshName(hoveredMeshName);
@@ -67,6 +68,7 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
 
   // ── Init viewer ──────────────────────────────
   useEffect(() => {
+    setAvailableMeshNames([]);
     if (!mountRef.current) return;
     let viewer: AnatomyViewer | null = null;
 
@@ -92,7 +94,7 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
       viewerRef.current = null;
       viewer?.dispose();
     };
-  }, [activeCatalogItem.modelPath]);
+  }, [activeCatalogItem.modelPath, setSelectedMesh, setHoveredMesh, setAvailableMeshNames]);
 
   // ── Sync buildId / vehicle searchParam / Initial overrides ──
   useEffect(() => {
@@ -122,14 +124,17 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
     }
   }, [selectedMeshName]);
 
-  // ── Re-apply material overrides after viewer finishes loading ──
+  // ── Re-apply material overrides & sync available mesh names after viewer finishes loading ──
   useEffect(() => {
     if (!loading && viewerRef.current) {
+      const loadedMeshNames = viewerRef.current.getLoadedMeshNames();
+      setAvailableMeshNames(loadedMeshNames);
+
       Object.entries(materialOverrides).forEach(([meshName, config]) => {
         viewerRef.current?.updateMaterial(meshName, config);
       });
     }
-  }, [loading, materialOverrides]);
+  }, [loading, materialOverrides, setAvailableMeshNames]);
 
   // ── Material update handler ──────────────────
   const handleUpdateMaterial = useCallback(

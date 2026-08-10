@@ -239,8 +239,10 @@ interface VehicleState {
   activeTool: string | null;
   autoRotate: boolean;
   activeViewPreset: ViewPreset;
+  availableMeshNames: string[];
 
   setSelectedVehicleId: (id: string) => void;
+  setAvailableMeshNames: (names: string[]) => void;
   setSelectedMesh: (meshName: string | null) => void;
   setHoveredMesh: (meshName: string | null) => void;
   updatePartMaterial: (meshName: string, config: Partial<PartMaterialConfig>) => void;
@@ -293,8 +295,10 @@ export const useVehicleStore = create<VehicleState>((set) => ({
   activeTool: null,
   autoRotate: false,
   activeViewPreset: "side",
+  availableMeshNames: [],
 
   setSelectedVehicleId: (id) => set({ selectedVehicleId: id }),
+  setAvailableMeshNames: (names) => set({ availableMeshNames: names }),
 
   setSelectedMesh: (meshName) =>
     set(() => {

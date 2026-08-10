@@ -149,6 +149,10 @@ export class AnatomyViewer {
     this.assets.prefetch(url);
   }
 
+  getLoadedMeshNames(): string[] {
+    return this.currentAsset ? this.currentAsset.meshes.map((m) => m.name).filter(Boolean) : [];
+  }
+
   async setVehicleModel(modelUrl: string) {
     const request = ++this.loadRequest;
     this.selectMesh(null);
