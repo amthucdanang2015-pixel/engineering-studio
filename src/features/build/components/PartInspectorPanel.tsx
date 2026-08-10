@@ -76,8 +76,8 @@ export const PartInspectorPanel: React.FC<PartInspectorPanelProps> = ({
           </div>
           <p className="text-[11px] font-bold uppercase tracking-widest text-[#e0564d] mb-1">Inspector</p>
           <p className="text-sm font-bold text-stone-800">No Component Selected</p>
-          <p className="text-xs text-stone-500 mt-1 leading-relaxed max-w-[180px]">
-            Click a part in the left panel or tap the vehicle directly to inspect it.
+          <p className="text-xs text-stone-500 mt-1 leading-relaxed max-w-[200px]">
+            Click a component directly on the 3D vehicle to inspect and customize it.
           </p>
         </div>
 

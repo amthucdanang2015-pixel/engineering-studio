@@ -11,13 +11,11 @@ import {
   X,
   RotateCcw,
   ZoomIn,
-  ZoomOut,
 } from "lucide-react";
 import { AnatomyViewer } from "@/viewer/AnatomyViewer";
 import { useVehicleStore, getPartByMeshName, VEHICLE_PARTS_DATA, isOverridesDirty } from "@/core/state/useVehicleStore";
 import { getVehicleCatalogItem } from "@/core/domain/vehicleCatalog";
 import { PartInspectorPanel } from "./PartInspectorPanel";
-import { AssemblyTreePanel } from "./AssemblyTreePanel";
 import { BuildCatalogView } from "./BuildCatalogView";
 import { Navbar } from "@/components/layout/Navbar";
 import { getSavedVehicleBuilds, saveVehicleBuild, type SavedVehicleBuild } from "@/core/state/savedBuilds";
@@ -48,9 +46,6 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
       setCurrentBuildId(buildIdParam);
     }
   }, [buildIdParam]);
-
-  // Mobile drawer state
-  const [mobileDrawer, setMobileDrawer] = useState<"none" | "components" | "inspector">("none");
 
   const {
     setSelectedMesh,
@@ -199,22 +194,14 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
     }, 2500);
   };
 
-  // ── Toolbar actions ──────────────────────────
-  const handleZoomIn = () => viewerRef.current?.zoom(-1);
-  const handleZoomOut = () => viewerRef.current?.zoom(1);
-  const handleReset = () => {
-    viewerRef.current?.resetView();
-    setSelectedMesh(null);
-  };
-
   return (
-    /* Root: full screen, column flex, no scroll */
-    <div style={{ display: "flex", flexDirection: "column", height: "100dvh", width: "100vw", overflow: "hidden", background: "#f7f4ed", color: "#1c1917", fontFamily: "var(--font-sans)" }}>
+    /* Root: full screen height on desktop, min-h-dvh on mobile with overflow scroll */
+    <div className="min-h-dvh lg:h-dvh w-full flex flex-col overflow-y-auto lg:overflow-hidden bg-[#f7f4ed] text-stone-900 font-sans">
 
       {/* ── HEADER ───────────────────────────────── */}
-      <header style={{ height: "56px", minHeight: "56px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", borderBottom: "1px solid #e8e2d5", background: "#f7f4ed", zIndex: 30 }}>
+      <header className="sticky top-0 z-30 h-[56px] min-h-[56px] shrink-0 flex items-center justify-between px-4 sm:px-5 border-b border-[#e8e2d5] bg-[#f7f4ed]">
         {/* Left: back button + vehicle name + active component pill */}
-        <div className="flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-3">
           <button
             type="button"
             onClick={() => router.push("/build")}
@@ -247,20 +234,12 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
         <Navbar />
       </header>
 
-      {/* ── MAIN 3-COLUMN LAYOUT ─────────────────── */}
-      {/* style guarantees: flex row fills all remaining height, never scrolls */}
-      <main style={{ flex: 1, display: "flex", flexDirection: "row", overflow: "hidden", minHeight: 0 }}>
+      {/* ── MAIN WORKSPACE LAYOUT ─────────────────── */}
+      {/* Desktop: flex-row filling 100dvh. Mobile/Tablet: flex-col with normal document scroll */}
+      <main className="flex-1 flex flex-col lg:flex-row overflow-visible lg:overflow-hidden min-h-0">
 
-        {/* LEFT: Components — always visible on desktop, hidden on mobile */}
-        <aside
-          className="hidden lg:flex"
-          style={{ width: "272px", minWidth: "272px", flexShrink: 0, flexDirection: "column", borderRight: "1px solid #e8e2d5", background: "#f7f4ed", overflow: "hidden" }}
-        >
-          <AssemblyTreePanel />
-        </aside>
-
-        {/* CENTER: 3D Viewport — takes all remaining horizontal space */}
-        <div style={{ flex: 1, minWidth: 0, minHeight: 0, position: "relative", overflow: "hidden", background: "#f2ebd9" }}>
+        {/* 3D Viewport — Bounded height on mobile/tablet, flex-1 filling desktop space */}
+        <div className="w-full lg:flex-1 h-[45vh] min-h-[340px] max-h-[480px] lg:h-full lg:min-h-0 lg:max-h-none relative overflow-hidden bg-[#f2ebd9] touch-pan-y shrink-0 lg:shrink">
           {/* WebGL canvas mount — absolutely fills the relative parent */}
           <div
             ref={mountRef}
@@ -286,10 +265,10 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
           )}
         </div>
 
-        {/* RIGHT: Inspector — always visible on desktop, hidden on mobile */}
+        {/* DESKTOP INSPECTOR SIDEBAR (1024px and wider) */}
         <aside
           className="hidden lg:flex"
-          style={{ width: "312px", minWidth: "312px", flexShrink: 0, flexDirection: "column", borderLeft: "1px solid #e8e2d5", background: "#f7f4ed", overflow: "hidden" }}
+          style={{ width: "340px", minWidth: "340px", flexShrink: 0, flexDirection: "column", borderLeft: "1px solid #e8e2d5", background: "#f7f4ed", overflow: "hidden" }}
         >
           <PartInspectorPanel
             onUpdateMaterial={handleUpdateMaterial}
@@ -299,62 +278,18 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
             isDirty={isDirty}
           />
         </aside>
-      </main>
 
-      {/* ── MOBILE BOTTOM TOOLBAR ─────────────────── */}
-      <div className="md:hidden shrink-0 flex border-t border-[#e8e2d5] bg-[#f7f4ed] z-30">
-        <button
-          type="button"
-          onClick={() => setMobileDrawer(mobileDrawer === "components" ? "none" : "components")}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 text-xs font-bold transition-colors ${mobileDrawer === "components"
-            ? "text-[#e0564d] bg-[#fef2f2]"
-            : "text-stone-600 hover:text-stone-900"
-            }`}
-        >
-          <Layers size={16} />
-          <span>Components</span>
-        </button>
-        <div className="w-px bg-[#e8e2d5]" />
-        <button
-          type="button"
-          onClick={() => setMobileDrawer(mobileDrawer === "inspector" ? "none" : "inspector")}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 text-xs font-bold transition-colors ${mobileDrawer === "inspector"
-            ? "text-[#e0564d] bg-[#fef2f2]"
-            : "text-stone-600 hover:text-stone-900"
-            }`}
-        >
-          <Sliders size={16} />
-          <span>Inspector</span>
-          {selectedPart && (
-            <span className="h-2 w-2 rounded-full bg-[#e0564d] ml-1" />
-          )}
-        </button>
-      </div>
-
-      {/* ── MOBILE DRAWERS ────────────────────────── */}
-      {mobileDrawer !== "none" && (
-        <div
-          className="lg:hidden fixed inset-0 z-40"
-          onClick={() => setMobileDrawer("none")}
-        >
-          <div className="absolute inset-0 bg-stone-900/20" />
-          <div
-            className="absolute bottom-0 left-0 right-0 max-h-[70vh] rounded-t-2xl overflow-hidden shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {mobileDrawer === "components" && <AssemblyTreePanel />}
-            {mobileDrawer === "inspector" && (
-              <PartInspectorPanel
-                onUpdateMaterial={handleUpdateMaterial}
-                onSave={handleSaveToGarage}
-                onDiscard={handleDiscard}
-                isSaved={isSaved}
-                isDirty={isDirty}
-              />
-            )}
-          </div>
+        {/* MOBILE / TABLET INSPECTOR SECTION (< 1024px) — Rendered in normal document flow below 3D vehicle */}
+        <div className="lg:hidden w-full border-t border-[#e8e2d5] bg-[#f7f4ed] flex flex-col">
+          <PartInspectorPanel
+            onUpdateMaterial={handleUpdateMaterial}
+            onSave={handleSaveToGarage}
+            onDiscard={handleDiscard}
+            isSaved={isSaved}
+            isDirty={isDirty}
+          />
         </div>
-      )}
+      </main>
 
       {/* ── LOADING OVERLAY ──────────────────────── */}
       {loading && (
