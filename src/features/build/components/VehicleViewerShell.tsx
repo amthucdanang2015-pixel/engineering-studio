@@ -21,6 +21,8 @@ import { Navbar } from "@/components/layout/Navbar";
 import { getSavedVehicleBuilds, saveVehicleBuild, type SavedVehicleBuild } from "@/core/state/savedBuilds";
 import type { PartMaterialConfig } from "@/core/domain/vehicle";
 
+import { VehicleLibrarySheet } from "./VehicleLibrarySheet";
+
 // ─────────────────────────────────────────────
 // BUILD WORKSPACE CONTENT
 // ─────────────────────────────────────────────
@@ -28,6 +30,7 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const buildIdParam = searchParams.get("buildId");
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
 
   const activeCatalogItem = getVehicleCatalogItem(vehicleParam);
 
@@ -194,6 +197,10 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
     }, 2500);
   };
 
+  const handleSelectVehicleFromSheet = (newVehicleId: string) => {
+    router.push(`/build?vehicle=${newVehicleId}`);
+  };
+
   return (
     /* Root: full screen height on desktop, min-h-dvh on mobile with overflow scroll */
     <div className="min-h-dvh lg:h-dvh w-full flex flex-col overflow-y-auto lg:overflow-hidden bg-[#f7f4ed] text-stone-900 font-sans">
@@ -201,22 +208,22 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
       {/* ── HEADER ───────────────────────────────── */}
       <header className="sticky top-0 z-30 h-[56px] min-h-[56px] shrink-0 flex items-center justify-between px-4 sm:px-5 border-b border-[#e8e2d5] bg-[#f7f4ed]">
         {/* Left: back button + vehicle name + active component pill */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => router.push("/build")}
-            className="h-8 w-8 rounded-full bg-white border border-[#e8e2d5] flex items-center justify-center text-stone-500 hover:text-[#e0564d] hover:border-[#e0564d] transition-colors shadow-sm"
+            className="h-8 w-8 rounded-full bg-white border border-[#e8e2d5] flex items-center justify-center text-stone-500 hover:text-[#e0564d] hover:border-[#e0564d] transition-colors shadow-2xs"
             title="Return to Vehicle Selection"
           >
             <ArrowLeft size={15} />
           </button>
           <div>
             <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Build Workspace</span>
-            <h1 className="text-sm font-extrabold text-stone-900 leading-tight">{activeCatalogItem.name}</h1>
+            <h1 className="text-xs sm:text-sm font-extrabold text-stone-900 leading-tight">{activeCatalogItem.name}</h1>
           </div>
 
           {selectedPart && (
-            <div className="flex items-center gap-2 bg-white border border-[#e8e2d5] rounded-full px-3 py-1 shadow-sm ml-2">
+            <div className="hidden sm:flex items-center gap-2 bg-white border border-[#e8e2d5] rounded-full px-3 py-1 shadow-2xs ml-2">
               <span className="h-2 w-2 rounded-full bg-[#e0564d]" />
               <span className="text-[11px] font-bold text-stone-800 truncate max-w-[160px]">{selectedPart.name}</span>
               <button
@@ -230,16 +237,16 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
           )}
         </div>
 
-        {/* Right: Top Navigation */}
-        <Navbar />
+        {/* Right: Top Navigation with Mobile Library Trigger */}
+        <Navbar onOpenLibrary={() => setIsLibraryOpen(true)} />
       </header>
 
       {/* ── MAIN WORKSPACE LAYOUT ─────────────────── */}
       {/* Desktop: flex-row filling 100dvh. Mobile/Tablet: flex-col with normal document scroll */}
       <main className="flex-1 flex flex-col lg:flex-row overflow-visible lg:overflow-hidden min-h-0">
 
-        {/* 3D Viewport — Bounded height on mobile/tablet, flex-1 filling desktop space */}
-        <div className="w-full lg:flex-1 h-[45vh] min-h-[340px] max-h-[480px] lg:h-full lg:min-h-0 lg:max-h-none relative overflow-hidden bg-[#f2ebd9] touch-pan-y shrink-0 lg:shrink">
+        {/* 3D Viewport — 60vh height on mobile (peeking inspector below), flex-1 filling desktop space */}
+        <div className="w-full lg:flex-1 h-[60vh] min-h-[340px] max-h-[520px] lg:h-full lg:min-h-0 lg:max-h-none relative overflow-hidden bg-[#f2ebd9] touch-pan-y shrink-0 lg:shrink">
           {/* WebGL canvas mount — absolutely fills the relative parent */}
           <div
             ref={mountRef}
@@ -290,6 +297,14 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
           />
         </div>
       </main>
+
+      {/* ── MOBILE VEHICLE LIBRARY SHEET OVERLAY ─────────────────── */}
+      <VehicleLibrarySheet
+        isOpen={isLibraryOpen}
+        onClose={() => setIsLibraryOpen(false)}
+        selectedVehicleId={activeCatalogItem.id}
+        onSelectVehicle={handleSelectVehicleFromSheet}
+      />
 
       {/* ── LOADING OVERLAY ──────────────────────── */}
       {loading && (

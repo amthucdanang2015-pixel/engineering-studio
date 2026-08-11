@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Activity,
@@ -15,11 +15,13 @@ import {
 import { VEHICLE_CATALOG, getVehicleCatalogItem } from "@/core/domain/vehicleCatalog";
 import { Garage3DPreview } from "@/features/garage/components/Garage3DPreview";
 import { Navbar } from "@/components/layout/Navbar";
+import { VehicleLibrarySheet } from "./VehicleLibrarySheet";
 
 export const BuildCatalogView: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const viewParam = searchParams.get("view");
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
 
   const selectedVehicle = getVehicleCatalogItem(viewParam);
 
@@ -32,170 +34,237 @@ export const BuildCatalogView: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-[#f4f6f9] text-slate-900 font-sans flex flex-col justify-between p-4 md:p-6 overflow-y-auto">
-      {/* Top Header Navigation */}
-      <header className="esf-panel w-full flex items-center justify-between rounded-2xl px-5 py-3.5 shadow-sm bg-white/90 backdrop-blur-md border border-slate-200 mb-6 shrink-0">
+    <div className="min-h-dvh lg:h-dvh w-full flex flex-col overflow-y-auto lg:overflow-hidden bg-[#f7f4ed] text-stone-900 font-sans">
+      {/* ── TOP HEADER NAVIGATION BAR ──────────────────────────────── */}
+      <header className="sticky top-0 z-30 h-[56px] min-h-[56px] shrink-0 flex items-center justify-between px-4 sm:px-5 border-b border-[#e8e2d5] bg-[#f7f4ed]">
         <div className="hidden md:flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f95738]/10 text-[#f95738] border border-[#f95738]/20">
-            <Activity size={20} />
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#e0564d]/10 text-[#e0564d] border border-[#e0564d]/20">
+            <Activity size={18} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-extrabold uppercase tracking-widest text-slate-400">ESF V2</span>
-              <span className="text-slate-300">/</span>
-              <h1 className="text-sm font-extrabold tracking-tight text-slate-900 uppercase">VEHICLE CATALOG</h1>
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-stone-400 font-mono">
+                ESF V2
+              </span>
+              <span className="text-stone-300">/</span>
+              <h1 className="text-xs font-black uppercase tracking-wider text-stone-900">
+                BASE VEHICLE CATALOG
+              </h1>
             </div>
-            <p className="text-[11px] text-slate-500 font-medium hidden sm:block">
-              Select a base vehicle architecture to start customizing in the workspace.
+            <p className="text-[11px] text-stone-500 font-medium hidden lg:block">
+              Select a base vehicle architecture specimen to begin engineering.
             </p>
           </div>
         </div>
 
-        {/* Top Navigation */}
-        <Navbar />
+        {/* Mobile Header Branding */}
+        <div className="flex md:hidden items-center gap-2">
+          <span className="text-xs font-black uppercase tracking-wider text-stone-900 font-mono">
+            VEHICLE SPECIMEN
+          </span>
+        </div>
+
+        {/* Top Navigation with Mobile Library Trigger */}
+        <Navbar onOpenLibrary={() => setIsLibraryOpen(true)} />
       </header>
 
-      {/* Main Workspace Layout */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-        {/* Large 3D Vehicle Hero Viewport */}
-        <div className="lg:col-span-8 h-[400px] sm:h-[480px] lg:h-[540px] relative rounded-3xl overflow-hidden esf-panel p-2 bg-white border border-slate-200 shadow-sm flex flex-col">
-          <div className="flex-1 w-full h-full relative">
-            <Garage3DPreview buildId={selectedVehicle.id} modelPath={selectedVehicle.modelPath} vehicleName={selectedVehicle.name} />
-
-            {/* Badge overlay on top of 3D preview */}
-            <div className="absolute top-4 left-4 z-10 flex items-center gap-2 bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-slate-200 shadow-sm">
-              <Sparkles size={14} className="text-[#f95738]" />
-              <span className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">{selectedVehicle.type}</span>
+      {/* ── MAIN STUDIO WORKSPACE LAYOUT ───────────────────────────── */}
+      <div className="flex-1 flex flex-col lg:flex-row overflow-visible lg:overflow-hidden min-h-0">
+        
+        {/* ── LEFT SIDEBAR: BASE VEHICLE LIBRARY (Desktop only: hidden lg:flex) ── */}
+        <aside className="hidden lg:flex w-full lg:w-72 xl:w-80 shrink-0 flex-col border-b lg:border-b-0 lg:border-r border-[#e8e2d5] bg-[#f7f4ed]">
+          {/* Library Panel Header */}
+          <div className="p-4 sm:px-5 py-3.5 border-b border-[#e8e2d5] flex items-center justify-between bg-[#f7f4ed] shrink-0">
+            <div>
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-stone-400 font-mono block">
+                BASE VEHICLES
+              </span>
+              <h2 className="text-xs font-extrabold text-stone-900 uppercase tracking-wider">
+                MODEL LIBRARY
+              </h2>
             </div>
+            <span className="text-[10px] font-extrabold text-[#e0564d] bg-[#e0564d]/10 border border-[#e0564d]/20 px-2.5 py-1 rounded-full font-mono">
+              {VEHICLE_CATALOG.length} MODELS
+            </span>
           </div>
-        </div>
 
-        {/* Selected Vehicle Details Panel */}
-        <div className="lg:col-span-4 flex flex-col justify-between esf-panel p-6 bg-white rounded-3xl border border-slate-200 shadow-sm">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#f95738] bg-[#f95738]/10 px-2.5 py-1 rounded-md border border-[#f95738]/20">
-                Active Base Selection
-              </span>
-              <span className="text-xs text-slate-400 font-mono">ID: {selectedVehicle.id}</span>
-            </div>
-
-            <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 mb-2">
-              {selectedVehicle.name}
-            </h2>
-
-            <p className="text-xs text-slate-600 leading-relaxed mb-6">
-              {selectedVehicle.description}
-            </p>
-
-            {/* Technical Specifications Grid */}
-            <div className="space-y-3 mb-6">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-                Vehicle Specifications
-              </span>
-
-              <div className="grid grid-cols-2 gap-2.5">
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  <div className="flex items-center gap-1.5 text-slate-400 mb-1">
-                    <Cpu size={14} />
-                    <span className="text-[10px] font-semibold uppercase">Powertrain</span>
+          {/* Model Specimen List */}
+          <div className="p-3 sm:p-4 space-y-2.5 overflow-y-auto lg:flex-1">
+            {VEHICLE_CATALOG.map((vehicle) => {
+              const isSelected = vehicle.id === selectedVehicle.id;
+              const imgUrl = vehicle.screenshotPath || null;
+              return (
+                <button
+                  key={vehicle.id}
+                  type="button"
+                  onClick={() => handleSelectVehicle(vehicle.id)}
+                  className={`w-full text-left p-3 rounded-2xl transition-all border flex items-center gap-3 group relative cursor-pointer ${
+                    isSelected
+                      ? "bg-white border-[#e0564d] shadow-xs ring-1 ring-[#e0564d]/30"
+                      : "bg-white/60 hover:bg-white border-stone-200/90 hover:border-stone-300 shadow-2xs"
+                  }`}
+                >
+                  {/* Vehicle Thumbnail */}
+                  <div
+                    className={`flex h-13 w-16 shrink-0 items-center justify-center rounded-xl overflow-hidden border transition-colors ${
+                      isSelected ? "border-[#e0564d]/30 bg-stone-50" : "border-stone-200 bg-stone-100"
+                    }`}
+                  >
+                    {imgUrl ? (
+                      <img
+                        src={imgUrl}
+                        alt={vehicle.name}
+                        className="w-full h-full object-cover rounded-xl transition-transform group-hover:scale-105"
+                      />
+                    ) : (
+                      <CheckCircle2 size={20} className={isSelected ? "text-[#e0564d]" : "text-stone-400"} />
+                    )}
                   </div>
-                  <span className="text-xs font-extrabold text-slate-800 block truncate">{selectedVehicle.specs.engine}</span>
-                </div>
 
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  <div className="flex items-center gap-1.5 text-slate-400 mb-1">
-                    <Zap size={14} />
-                    <span className="text-[10px] font-semibold uppercase">Output</span>
-                  </div>
-                  <span className="text-xs font-extrabold text-slate-800 block">{selectedVehicle.specs.power}</span>
-                </div>
+                  {/* Vehicle Card Information */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1.5 mb-0.5">
+                      <span className="text-[9px] font-extrabold uppercase tracking-wider text-stone-400 truncate">
+                        {vehicle.type}
+                      </span>
+                      {isSelected && (
+                        <span className="text-[9px] font-extrabold uppercase tracking-wider bg-[#e0564d]/10 text-[#e0564d] px-2 py-0.5 rounded-md shrink-0">
+                          Selected
+                        </span>
+                      )}
+                    </div>
 
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  <div className="flex items-center gap-1.5 text-slate-400 mb-1">
-                    <Gauge size={14} />
-                    <span className="text-[10px] font-semibold uppercase">Total Weight</span>
-                  </div>
-                  <span className="text-xs font-extrabold text-slate-800 block">{selectedVehicle.specs.weight}</span>
-                </div>
+                    <h3 className="text-xs sm:text-sm font-extrabold text-stone-900 truncate group-hover:text-[#e0564d] transition-colors">
+                      {vehicle.name}
+                    </h3>
 
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  <div className="flex items-center gap-1.5 text-slate-400 mb-1">
-                    <Layers size={14} />
-                    <span className="text-[10px] font-semibold uppercase">Drivetrain</span>
+                    <p className="text-[10px] text-stone-500 font-mono truncate mt-0.5">
+                      {vehicle.specs.engine}
+                    </p>
                   </div>
-                  <span className="text-xs font-extrabold text-slate-800 block truncate">{selectedVehicle.specs.drivetrain}</span>
-                </div>
+                </button>
+              );
+            })}
+          </div>
+        </aside>
+
+        {/* ── RIGHT MAIN WORKSPACE: 3D SPECIMEN VIEWER & DETAILS ───── */}
+        <main className="flex-1 flex flex-col lg:flex-row overflow-visible lg:overflow-hidden relative bg-[#f7f4ed] p-3 sm:p-4 lg:p-5 gap-4 sm:gap-5 min-h-0">
+          
+          {/* 3D Vehicle Viewport Hero Area - Top of mobile layout (60vh height peeking content below) */}
+          <div className="w-full lg:flex-1 h-[60vh] min-h-[340px] max-h-[520px] lg:h-full relative rounded-2xl overflow-hidden border border-[#e8e2d5] bg-[#f2ebd9] p-2 sm:p-3 touch-pan-y shrink-0 lg:shrink flex flex-col">
+            <div className="relative w-full h-full rounded-xl overflow-hidden">
+              <Garage3DPreview
+                buildId={selectedVehicle.id}
+                modelPath={selectedVehicle.modelPath}
+                vehicleName={selectedVehicle.name}
+              />
+
+              {/* Specimen Category Badge Overlay */}
+              <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-10 flex items-center gap-2 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-[#e8e2d5] shadow-2xs">
+                <Sparkles size={14} className="text-[#e0564d]" />
+                <span className="text-[11px] font-extrabold text-stone-800 uppercase tracking-wider">
+                  {selectedVehicle.type}
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Action CTA Button */}
-          <button
-            type="button"
-            onClick={handleStartBuilding}
-            className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-[#f95738] hover:bg-[#e0482b] text-white font-extrabold text-sm transition-all shadow-md hover:shadow-lg active:scale-[0.99] group mt-4"
-          >
-            <span>Start Building</span>
-            <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
-          </button>
-        </div>
-      </div>
+          {/* Selected Vehicle Specimen Info & Action Panel - Positioned below 3D viewer on mobile */}
+          <div className="w-full lg:w-[340px] xl:w-[380px] shrink-0 border border-[#e8e2d5] bg-[#f7f4ed] rounded-2xl p-5 sm:p-6 flex flex-col justify-between overflow-y-auto">
+            <div>
+              {/* Header Badge */}
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#e0564d] bg-[#e0564d]/10 px-2.5 py-1 rounded-md border border-[#e0564d]/20 font-mono">
+                  ACTIVE BASE SPECIMEN
+                </span>
+                <span className="text-[10px] text-stone-400 font-mono">ID: {selectedVehicle.id}</span>
+              </div>
 
-      {/* Bottom Vehicle Catalog Selection Cards Bar */}
-      <section className="w-full shrink-0">
-        <div className="flex items-center justify-between mb-3 px-1">
-          <div className="flex items-center gap-2">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">SELECT BASE VEHICLE MODEL</h3>
-            <span className="text-xs font-bold text-[#f95738] bg-[#f95738]/10 px-2 py-0.5 rounded-full font-mono">{VEHICLE_CATALOG?.length} Models</span>
-          </div>
-          <span className="text-[11px] text-slate-400 hidden sm:inline">Click a vehicle card to preview and configure</span>
-        </div>
+              <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-stone-900 mb-2">
+                {selectedVehicle.name}
+              </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-2">
-          {VEHICLE_CATALOG.map((vehicle) => {
-            const isSelected = vehicle.id === selectedVehicle.id;
-            const imgUrl = vehicle.screenshotPath || null;
-            return (
-              <button
-                key={vehicle.id}
-                type="button"
-                onClick={() => handleSelectVehicle(vehicle.id)}
-                className={`text-left p-4 rounded-2xl transition-all border flex items-start gap-4 ${isSelected
-                  ? "bg-white border-[#f95738] shadow-md ring-2 ring-[#f95738]/20"
-                  : "bg-white/80 hover:bg-white border-slate-200 hover:border-slate-300 shadow-sm"
-                  }`}
-              >
-                {/* Status Icon */}
-                <div
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors ${isSelected ? "bg-[#f95738] text-white shadow-sm" : "bg-slate-100 text-slate-500"
-                    }`}
-                >
-                  {imgUrl ? <img src={imgUrl} alt={vehicle.name} className="w-full h-full object-cover rounded-xl" /> : <CheckCircle2 size={20} />}
+              <p className="text-xs text-stone-600 leading-relaxed mb-6 font-medium">
+                {selectedVehicle.description}
+              </p>
+
+              {/* Specifications Grid */}
+              <div className="space-y-3.5 mb-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-stone-400 font-mono">
+                    SPECIFICATION METRICS
+                  </span>
+                  <span className="text-[10px] text-stone-400 font-mono">ESF V2 ARCHITECTURE</span>
                 </div>
 
-                {/* Card Information */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#f95738]">
-                      {vehicle.type}
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div className="bg-white p-3 rounded-xl border border-[#e8e2d5] shadow-2xs">
+                    <div className="flex items-center gap-1.5 text-stone-400 mb-1">
+                      <Cpu size={13} className="text-[#e0564d]" />
+                      <span className="text-[9px] font-extrabold uppercase tracking-wider">Powertrain</span>
+                    </div>
+                    <span className="text-xs font-extrabold text-stone-800 block truncate">
+                      {selectedVehicle.specs.engine}
                     </span>
-                    {isSelected && (
-                      <span className="text-[9px] font-extrabold uppercase tracking-wider bg-[#f95738]/10 text-[#f95738] px-2 py-0.5 rounded-full">
-                        Selected
-                      </span>
-                    )}
                   </div>
 
-                  <h4 className="text-sm font-extrabold text-slate-900 truncate mb-1">{vehicle.name}</h4>
+                  <div className="bg-white p-3 rounded-xl border border-[#e8e2d5] shadow-2xs">
+                    <div className="flex items-center gap-1.5 text-stone-400 mb-1">
+                      <Zap size={13} className="text-[#e0564d]" />
+                      <span className="text-[9px] font-extrabold uppercase tracking-wider">Output</span>
+                    </div>
+                    <span className="text-xs font-extrabold text-stone-800 block">
+                      {selectedVehicle.specs.power}
+                    </span>
+                  </div>
 
-                  <p className="text-xs text-slate-500 line-clamp-1 font-mono">{vehicle.specs.engine}</p>
+                  <div className="bg-white p-3 rounded-xl border border-[#e8e2d5] shadow-2xs">
+                    <div className="flex items-center gap-1.5 text-stone-400 mb-1">
+                      <Gauge size={13} className="text-[#e0564d]" />
+                      <span className="text-[9px] font-extrabold uppercase tracking-wider">Total Weight</span>
+                    </div>
+                    <span className="text-xs font-extrabold text-stone-800 block">
+                      {selectedVehicle.specs.weight}
+                    </span>
+                  </div>
+
+                  <div className="bg-white p-3 rounded-xl border border-[#e8e2d5] shadow-2xs">
+                    <div className="flex items-center gap-1.5 text-stone-400 mb-1">
+                      <Layers size={13} className="text-[#e0564d]" />
+                      <span className="text-[9px] font-extrabold uppercase tracking-wider">Drivetrain</span>
+                    </div>
+                    <span className="text-xs font-extrabold text-stone-800 block truncate">
+                      {selectedVehicle.specs.drivetrain}
+                    </span>
+                  </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Start Building Action CTA */}
+            <div className="pt-4 border-t border-[#e8e2d5]/80">
+              <button
+                type="button"
+                onClick={handleStartBuilding}
+                className="w-full flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-2xl bg-[#e0564d] hover:bg-[#c9463e] text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider transition-all shadow-md hover:shadow-lg active:scale-[0.99] group cursor-pointer"
+              >
+                <span>Start Building</span>
+                <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
               </button>
-            );
-          })}
-        </div>
-      </section>
+            </div>
+          </div>
+        </main>
+      </div>
+
+      {/* ── MOBILE VEHICLE LIBRARY SHEET OVERLAY ─────────────────── */}
+      <VehicleLibrarySheet
+        isOpen={isLibraryOpen}
+        onClose={() => setIsLibraryOpen(false)}
+        selectedVehicleId={selectedVehicle.id}
+        onSelectVehicle={handleSelectVehicle}
+      />
     </div>
   );
 };
+

@@ -80,11 +80,11 @@ export class CameraController {
 
     const fovRad = THREE.MathUtils.degToRad(this.camera.fov);
 
-    let frustumH = size.y / 0.2;
+    let frustumH = size.y / 0.24;
     let frustumW = frustumH * aspect;
 
-    if (frustumW < size.x / 0.70) {
-      frustumW = size.x / 0.70;
+    if (frustumW < size.x / 0.82) {
+      frustumW = size.x / 0.82;
       frustumH = frustumW / aspect;
     }
 

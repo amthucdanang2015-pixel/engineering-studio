@@ -87,18 +87,18 @@ export const Garage3DPreview: React.FC<Garage3DPreviewProps> = ({
   }, [buildId, modelPath, materialOverrides]);
 
   return (
-    <div className="relative h-full w-full rounded-2xl overflow-hidden bg-slate-900/5 border border-slate-200 esf-grid-bg">
+    <div className="relative h-full w-full rounded-2xl overflow-hidden bg-[#f8f5ee] border border-[#e8e2d5]">
       {/* 3D WebGL Canvas Viewport */}
       <div ref={mountRef} className="h-full w-full" />
 
       {/* Loading Overlay */}
       {loading && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f95738]/10 text-[#f95738] border border-[#f95738]/20 animate-pulse mb-2">
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#f7f4ed]/90 backdrop-blur-sm">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e0564d]/10 text-[#e0564d] border border-[#e0564d]/20 animate-pulse mb-2">
             <Box size={20} />
           </div>
-          <p className="text-xs font-bold text-slate-800">Loading {vehicleName}</p>
-          <p className="text-[10px] text-slate-500 font-mono mt-0.5">{Math.max(10, Math.round(progress * 100))}%</p>
+          <p className="text-xs font-bold text-stone-800">Loading {vehicleName}</p>
+          <p className="text-[10px] text-stone-500 font-mono mt-0.5">{Math.max(10, Math.round(progress * 100))}%</p>
         </div>
       )}
     </div>

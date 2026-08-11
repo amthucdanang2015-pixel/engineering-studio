@@ -4,9 +4,13 @@ import React, { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Wrench, Car, Gauge, Menu, X, ChevronRight } from "lucide-react";
+import { Wrench, Car, Gauge, Menu, X, ChevronRight, BookOpen } from "lucide-react";
 
-export const Navbar: React.FC = () => {
+interface NavbarProps {
+  onOpenLibrary?: () => void;
+}
+
+export const Navbar: React.FC<NavbarProps> = ({ onOpenLibrary }) => {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
@@ -123,8 +127,21 @@ export const Navbar: React.FC = () => {
       </nav>
 
       {/* ── MOBILE HEADER CONTROLS (Visible on screens smaller than md) ──── */}
-      {/* Minimal left-aligned [ ☰ ] [ ESF ] header trigger */}
-      <div className="flex md:hidden items-center gap-2.5">
+      <div className="flex md:hidden items-center gap-2">
+        {onOpenLibrary && (
+          <button
+            type="button"
+            onClick={onOpenLibrary}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#e8e2d5] text-stone-800 hover:bg-stone-50 transition-all shadow-2xs active:scale-[0.97] cursor-pointer"
+            aria-label="Open Vehicle Library"
+          >
+            <BookOpen size={14} className="text-[#e0564d]" />
+            <span className="text-xs font-extrabold uppercase tracking-wider text-stone-900 font-mono">
+              Library
+            </span>
+          </button>
+        )}
+
         <button
           type="button"
           onClick={handleOpen}
