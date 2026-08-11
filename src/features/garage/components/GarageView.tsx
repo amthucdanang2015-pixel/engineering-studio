@@ -17,6 +17,7 @@ import { getVehicleCatalogItem } from "@/core/domain/vehicleCatalog";
 import { Garage3DPreview } from "./Garage3DPreview";
 import { getSavedVehicleBuilds, deleteSavedVehicleBuild, type SavedVehicleBuild } from "@/core/state/savedBuilds";
 import { Navbar } from "@/components/layout/Navbar";
+import { DeleteConfirmationModal } from "./DeleteConfirmationModal";
 
 export const GarageView: React.FC = () => {
   const router = useRouter();
@@ -25,6 +26,7 @@ export const GarageView: React.FC = () => {
 
   const [savedBuilds, setSavedBuilds] = useState<SavedVehicleBuild[]>([]);
   const [selectedBuildId, setSelectedBuildId] = useState<string | null>(null);
+  const [buildToDelete, setBuildToDelete] = useState<SavedVehicleBuild | null>(null);
 
   useEffect(() => {
     const builds = getSavedVehicleBuilds();
@@ -58,8 +60,15 @@ export const GarageView: React.FC = () => {
     router.push(`/test?buildId=${build.id}&vehicle=${build.baseVehicleId}`);
   };
 
-  const handleDeleteSavedBuild = (e: React.MouseEvent, id: string) => {
+  const onRequestDelete = (e: React.MouseEvent, build: SavedVehicleBuild) => {
     e.stopPropagation();
+    setBuildToDelete(build);
+  };
+
+  const confirmDeleteBuild = () => {
+    if (!buildToDelete) return;
+    const id = buildToDelete.id;
+    setBuildToDelete(null);
     const updated = deleteSavedVehicleBuild(id);
     setSavedBuilds(updated);
     if (selectedBuildId === id) {
@@ -215,7 +224,7 @@ export const GarageView: React.FC = () => {
 
                 <button
                   type="button"
-                  onClick={(e) => handleDeleteSavedBuild(e, selectedBuild.id)}
+                  onClick={(e) => onRequestDelete(e, selectedBuild)}
                   className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-400 hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-colors shadow-xs cursor-pointer self-end sm:self-auto"
                   title="Delete Saved Build"
                 >
@@ -263,8 +272,8 @@ export const GarageView: React.FC = () => {
                         </span>
                         <button
                           type="button"
-                          onClick={(e) => handleDeleteSavedBuild(e, build.id)}
-                          className="text-slate-400 hover:text-red-600 transition-colors p-1 rounded-lg hover:bg-red-50"
+                          onClick={(e) => onRequestDelete(e, build)}
+                          className="text-slate-400 hover:text-red-600 transition-colors p-1 rounded-lg hover:bg-red-50 cursor-pointer"
                           title="Delete Build"
                         >
                           <Trash2 size={13} />
@@ -330,6 +339,14 @@ export const GarageView: React.FC = () => {
           </button>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={Boolean(buildToDelete)}
+        vehicleName={buildToDelete?.name || ""}
+        onClose={() => setBuildToDelete(null)}
+        onConfirm={confirmDeleteBuild}
+      />
     </div>
   );
 };
