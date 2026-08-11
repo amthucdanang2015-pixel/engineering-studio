@@ -91,18 +91,17 @@ export class CameraController {
 
     const fovRad = THREE.MathUtils.degToRad(this.camera.fov);
 
-    let frustumH = safeSizeY / 0.62;
+    let frustumH = safeSizeY / 0.30;
     let frustumW = frustumH * aspect;
 
-    if (frustumW < safeSizeX / 0.72) {
-      frustumW = safeSizeX / 0.72;
+    if (frustumW < safeSizeX / 0.42) {
+      frustumW = safeSizeX / 0.42;
       frustumH = frustumW / aspect;
     }
 
-    // Frame vehicle comfortably within 3.2m - 5.8m distance range
+    // Frame vehicle comfortably zoomed out with ~20-25% whitespace around all four sides
     const calculatedDist = frustumH / (2 * Math.tan(fovRad / 2));
-    const dist = THREE.MathUtils.clamp(calculatedDist, 3.2, 5.8);
-
+    const dist = THREE.MathUtils.clamp(calculatedDist, 3.5, 14.0);
     const eyeY = center.y + 0.15;
 
     let targetCam = { x: center.x, y: eyeY, z: center.z + dist };

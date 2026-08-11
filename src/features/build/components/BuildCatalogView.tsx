@@ -70,7 +70,7 @@ export const BuildCatalogView: React.FC = () => {
 
       {/* ── MAIN STUDIO WORKSPACE LAYOUT ───────────────────────────── */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-visible lg:overflow-hidden min-h-0">
-        
+
         {/* ── LEFT SIDEBAR: BASE VEHICLE LIBRARY (Desktop only: hidden lg:flex) ── */}
         <aside className="hidden lg:flex w-full lg:w-72 xl:w-80 shrink-0 flex-col border-b lg:border-b-0 lg:border-r border-[#e8e2d5] bg-[#f7f4ed]">
           {/* Library Panel Header */}
@@ -98,17 +98,15 @@ export const BuildCatalogView: React.FC = () => {
                   key={vehicle.id}
                   type="button"
                   onClick={() => handleSelectVehicle(vehicle.id)}
-                  className={`w-full text-left p-3 rounded-2xl transition-all border flex items-center gap-3 group relative cursor-pointer ${
-                    isSelected
-                      ? "bg-white border-[#e0564d] shadow-xs ring-1 ring-[#e0564d]/30"
-                      : "bg-white/60 hover:bg-white border-stone-200/90 hover:border-stone-300 shadow-2xs"
-                  }`}
+                  className={`w-full text-left p-3 rounded-2xl transition-all border flex items-center gap-3 group relative cursor-pointer ${isSelected
+                    ? "bg-white border-[#e0564d] shadow-xs ring-1 ring-[#e0564d]/30"
+                    : "bg-white/60 hover:bg-white border-stone-200/90 hover:border-stone-300 shadow-2xs"
+                    }`}
                 >
                   {/* Vehicle Thumbnail */}
                   <div
-                    className={`flex h-13 w-16 shrink-0 items-center justify-center rounded-xl overflow-hidden border transition-colors ${
-                      isSelected ? "border-[#e0564d]/30 bg-stone-50" : "border-stone-200 bg-stone-100"
-                    }`}
+                    className={`flex h-13 w-16 shrink-0 items-center justify-center rounded-xl overflow-hidden border transition-colors ${isSelected ? "border-[#e0564d]/30 bg-stone-50" : "border-stone-200 bg-stone-100"
+                      }`}
                   >
                     {imgUrl ? (
                       <img
@@ -150,7 +148,7 @@ export const BuildCatalogView: React.FC = () => {
 
         {/* ── RIGHT MAIN WORKSPACE: 3D SPECIMEN VIEWER & DETAILS ───── */}
         <main className="flex-1 flex flex-col lg:flex-row overflow-visible lg:overflow-hidden relative bg-[#f7f4ed] p-3 sm:p-4 lg:p-5 gap-4 sm:gap-5 min-h-0">
-          
+
           {/* 3D Vehicle Viewport Hero Area - Fills available workspace height on desktop */}
           <div className="w-full lg:flex-1 h-[60vh] min-h-[340px] max-h-[520px] lg:max-h-none lg:h-full relative rounded-2xl overflow-hidden border border-[#e8e2d5] bg-[#f2ebd9] p-2 sm:p-3 touch-pan-y shrink-0 lg:shrink flex flex-col">
             <div className="relative w-full h-full rounded-xl overflow-hidden">
