@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { TestView } from "@/features/test/components/TestView";
 import type { Metadata } from "next";
 
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function TestPage() {
-  return <TestView />;
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#f4f6f9]" />}>
+      <TestView />
+    </Suspense>
+  );
 }

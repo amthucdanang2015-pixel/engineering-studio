@@ -84,13 +84,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLibrary }) => {
       icon: Wrench,
       isActive: isGarageActive,
     },
-    {
-      id: "test",
-      label: "TEST",
-      href: "/test",
-      icon: Gauge,
-      isActive: isTestActive,
-    },
   ];
 
   return (

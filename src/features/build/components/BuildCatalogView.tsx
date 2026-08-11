@@ -151,8 +151,8 @@ export const BuildCatalogView: React.FC = () => {
         {/* ── RIGHT MAIN WORKSPACE: 3D SPECIMEN VIEWER & DETAILS ───── */}
         <main className="flex-1 flex flex-col lg:flex-row overflow-visible lg:overflow-hidden relative bg-[#f7f4ed] p-3 sm:p-4 lg:p-5 gap-4 sm:gap-5 min-h-0">
           
-          {/* 3D Vehicle Viewport Hero Area - Top of mobile layout (60vh height peeking content below) */}
-          <div className="w-full lg:flex-1 h-[60vh] min-h-[340px] max-h-[520px] lg:h-full relative rounded-2xl overflow-hidden border border-[#e8e2d5] bg-[#f2ebd9] p-2 sm:p-3 touch-pan-y shrink-0 lg:shrink flex flex-col">
+          {/* 3D Vehicle Viewport Hero Area - Fills available workspace height on desktop */}
+          <div className="w-full lg:flex-1 h-[60vh] min-h-[340px] max-h-[520px] lg:max-h-none lg:h-full relative rounded-2xl overflow-hidden border border-[#e8e2d5] bg-[#f2ebd9] p-2 sm:p-3 touch-pan-y shrink-0 lg:shrink flex flex-col">
             <div className="relative w-full h-full rounded-xl overflow-hidden">
               <Garage3DPreview
                 buildId={selectedVehicle.id}

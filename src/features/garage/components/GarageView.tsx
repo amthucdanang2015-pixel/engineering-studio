@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowRight,
   Cpu,
@@ -20,16 +20,32 @@ import { Navbar } from "@/components/layout/Navbar";
 
 export const GarageView: React.FC = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const buildIdFromUrl = searchParams.get("id");
+
   const [savedBuilds, setSavedBuilds] = useState<SavedVehicleBuild[]>([]);
   const [selectedBuildId, setSelectedBuildId] = useState<string | null>(null);
 
   useEffect(() => {
     const builds = getSavedVehicleBuilds();
     setSavedBuilds(builds);
+
     if (builds.length > 0) {
-      setSelectedBuildId(builds[0].id);
+      // Check if buildIdFromUrl exists in savedBuilds
+      const matchingBuild = buildIdFromUrl ? builds.find((b) => b.id === buildIdFromUrl) : null;
+      if (matchingBuild) {
+        setSelectedBuildId(matchingBuild.id);
+      } else {
+        // Fallback gracefully to first saved build
+        setSelectedBuildId(builds[0].id);
+      }
     }
-  }, []);
+  }, [buildIdFromUrl]);
+
+  const handleSelectBuild = (id: string) => {
+    setSelectedBuildId(id);
+    router.replace(`/garage?id=${id}`, { scroll: false });
+  };
 
   const selectedBuild = savedBuilds.find((b) => b.id === selectedBuildId) || savedBuilds[0] || null;
   const selectedBaseVehicle = selectedBuild ? getVehicleCatalogItem(selectedBuild.baseVehicleId) : null;
@@ -38,12 +54,22 @@ export const GarageView: React.FC = () => {
     router.push(`/build?vehicle=${build.baseVehicleId}&buildId=${build.id}`);
   };
 
+  const handleTestSavedBuild = (build: SavedVehicleBuild) => {
+    router.push(`/test?buildId=${build.id}&vehicle=${build.baseVehicleId}`);
+  };
+
   const handleDeleteSavedBuild = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     const updated = deleteSavedVehicleBuild(id);
     setSavedBuilds(updated);
     if (selectedBuildId === id) {
-      setSelectedBuildId(updated.length > 0 ? updated[0].id : null);
+      if (updated.length > 0) {
+        setSelectedBuildId(updated[0].id);
+        router.replace(`/garage?id=${updated[0].id}`, { scroll: false });
+      } else {
+        setSelectedBuildId(null);
+        router.replace("/garage", { scroll: false });
+      }
     }
   };
 
@@ -167,19 +193,30 @@ export const GarageView: React.FC = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-2 mt-4">
+              <div className="flex flex-col sm:flex-row gap-2.5 mt-4">
                 <button
                   type="button"
                   onClick={() => handleOpenSavedBuild(selectedBuild)}
-                  className="flex-1 flex items-center justify-center gap-2 py-3.5 px-5 rounded-2xl bg-[#f95738] hover:bg-[#e0482b] text-white font-extrabold text-sm transition-all shadow-md hover:shadow-lg active:scale-[0.99] group"
+                  className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl bg-[#f95738] hover:bg-[#e0482b] text-white font-extrabold text-xs uppercase tracking-wider transition-all shadow-md hover:shadow-lg active:scale-[0.99] group cursor-pointer"
                 >
                   <span>Open Build Workspace</span>
-                  <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+                  <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
                 </button>
+                
+                <button
+                  type="button"
+                  onClick={() => handleTestSavedBuild(selectedBuild)}
+                  className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl bg-stone-900 hover:bg-stone-800 text-white font-extrabold text-xs uppercase tracking-wider transition-all shadow-md hover:shadow-lg active:scale-[0.99] group cursor-pointer border border-stone-800"
+                >
+                  <Zap size={15} className="text-[#f95738]" />
+                  <span>Test Vehicle</span>
+                  <ArrowRight size={15} className="transition-transform group-hover:translate-x-1 text-stone-400 group-hover:text-white" />
+                </button>
+
                 <button
                   type="button"
                   onClick={(e) => handleDeleteSavedBuild(e, selectedBuild.id)}
-                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-400 hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-colors shadow-xs"
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-400 hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-colors shadow-xs cursor-pointer self-end sm:self-auto"
                   title="Delete Saved Build"
                 >
                   <Trash2 size={18} />
@@ -200,7 +237,7 @@ export const GarageView: React.FC = () => {
                   {savedBuilds.length} Saved
                 </span>
               </div>
-              <span className="text-[11px] text-slate-400 hidden sm:inline">Click a build card to view or edit</span>
+              <span className="text-[11px] text-slate-400 hidden sm:inline">Click a build card to view, test or edit</span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-2">
@@ -212,7 +249,7 @@ export const GarageView: React.FC = () => {
                 return (
                   <div
                     key={build.id}
-                    onClick={() => setSelectedBuildId(build.id)}
+                    onClick={() => handleSelectBuild(build.id)}
                     className={`cursor-pointer text-left p-4 rounded-2xl transition-all border bg-white flex flex-col justify-between group ${
                       isSelected
                         ? "border-[#f95738] shadow-md ring-2 ring-[#f95738]/20"
@@ -238,19 +275,34 @@ export const GarageView: React.FC = () => {
                       <p className="text-[11px] text-slate-500 font-mono mb-2">Base: {baseCatalog.name}</p>
                     </div>
 
-                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-slate-600">
-                      <span className="text-[10px] text-slate-400 font-mono">{build.savedAt}</span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenSavedBuild(build);
-                        }}
-                        className="text-[#f95738] font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform"
-                      >
-                        <span>{customCount} custom parts</span>
-                        <ArrowRight size={12} />
-                      </button>
+                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-slate-600 gap-2">
+                      <span className="text-[10px] text-slate-400 font-mono shrink-0">{build.savedAt}</span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTestSavedBuild(build);
+                          }}
+                          className="text-stone-900 hover:text-[#f95738] font-extrabold text-[10px] uppercase tracking-wider flex items-center gap-1 bg-stone-100 hover:bg-stone-200/80 px-2.5 py-1 rounded-xl transition-colors cursor-pointer border border-stone-200/60"
+                          title="Test this custom build"
+                        >
+                          <Zap size={12} className="text-[#f95738]" />
+                          <span>Test</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenSavedBuild(build);
+                          }}
+                          className="text-[#f95738] font-bold text-[11px] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform"
+                        >
+                          <span>{customCount} parts</span>
+                          <ArrowRight size={12} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
