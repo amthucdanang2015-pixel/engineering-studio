@@ -23,12 +23,14 @@ export class CameraController {
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.055;
     this.controls.enablePan = true;
-    this.controls.minDistance = VIEWER_CONFIG.MIN_ZOOM_DISTANCE;
+    this.controls.minDistance = 0.3; // Allow close-up inspection into cabin/cockpit
     this.controls.maxDistance = VIEWER_CONFIG.MAX_ZOOM_DISTANCE;
 
-    // Disable OrbitControls camera rotation during pointer drag
-    // Vehicle rotation is applied ONLY to VehicleRoot.rotation.y, keeping Platform & EnvironmentRoot 100% fixed!
-    this.controls.enableRotate = false;
+    // Enable OrbitControls camera rotation for professional vehicle inspection:
+    // Camera orbits around the stationary vehicle 360° horizontally and vertically.
+    this.controls.enableRotate = true;
+    this.controls.minPolarAngle = Math.PI * 0.05; // ~9°: look down into roof/cockpit/interior
+    this.controls.maxPolarAngle = Math.PI * 0.92; // ~165°: look up at underbody/chassis without flipping
     this.controls.autoRotate = false;
     this.controls.target.set(
       VIEWER_CONFIG.HOME_TARGET.x,
@@ -43,7 +45,12 @@ export class CameraController {
   }
 
   update(delta: number, isSelected: boolean) {
-    this.controls.autoRotate = false;
+    if (this.autoRotateWanted && !isSelected) {
+      this.controls.autoRotate = true;
+      this.controls.autoRotateSpeed = VIEWER_CONFIG.AUTO_ROTATE_SPEED * 1.5;
+    } else {
+      this.controls.autoRotate = false;
+    }
     return this.controls.update(delta);
   }
 
@@ -70,62 +77,67 @@ export class CameraController {
   }
 
   // Dynamic Bounding Box Camera Framing (THREE.Box3):
-  // TEMPORARY DIAGNOSTIC TEST: Multiply camera distance by 2.0x to prove distance control
   frameObject(box: THREE.Box3, aspect: number, preset: ViewPreset = this.currentPreset, duration = 0.85) {
     this.lastBox = box;
     this.currentPreset = preset;
 
-    const size = box.getSize(new THREE.Vector3());
-    const center = box.getCenter(new THREE.Vector3());
+    // Handle empty or invalid bounding box
+    const size = box.isEmpty() ? new THREE.Vector3(4.2, 1.4, 1.8) : box.getSize(new THREE.Vector3());
+    const center = box.isEmpty() ? new THREE.Vector3(0, 0, 0) : box.getCenter(new THREE.Vector3());
+
+    // Ensure safe positive dimensions
+    const safeSizeY = Math.max(size.y, 0.8);
+    const safeSizeX = Math.max(size.x, 1.5);
 
     const fovRad = THREE.MathUtils.degToRad(this.camera.fov);
 
-    let frustumH = size.y / 0.24;
+    let frustumH = safeSizeY / 0.62;
     let frustumW = frustumH * aspect;
 
-    if (frustumW < size.x / 0.82) {
-      frustumW = size.x / 0.82;
+    if (frustumW < safeSizeX / 0.72) {
+      frustumW = safeSizeX / 0.72;
       frustumH = frustumW / aspect;
     }
 
-    // Frame vehicle to fill ~65% of viewport height
+    // Frame vehicle comfortably within 3.2m - 5.8m distance range
     const calculatedDist = frustumH / (2 * Math.tan(fovRad / 2));
-    const dist = calculatedDist;
+    const dist = THREE.MathUtils.clamp(calculatedDist, 3.2, 5.8);
 
-    let targetCam = { x: center.x, y: center.y, z: center.z + dist };
-    let targetCenter = { x: center.x, y: center.y, z: center.z };
+    const eyeY = center.y + 0.15;
+
+    let targetCam = { x: center.x, y: eyeY, z: center.z + dist };
+    let targetCenter = { x: center.x, y: eyeY, z: center.z };
 
     switch (preset) {
       case "side":
-        targetCam = { x: center.x, y: center.y, z: center.z + dist };
-        targetCenter = { x: center.x, y: center.y, z: center.z };
+        targetCam = { x: center.x, y: eyeY, z: center.z + dist };
+        targetCenter = { x: center.x, y: eyeY, z: center.z };
         break;
       case "front":
-        targetCam = { x: center.x - dist, y: center.y, z: center.z };
-        targetCenter = { x: center.x, y: center.y, z: center.z };
+        targetCam = { x: center.x - dist, y: eyeY, z: center.z };
+        targetCenter = { x: center.x, y: eyeY, z: center.z };
         break;
       case "top":
-        targetCam = { x: center.x, y: center.y + dist * 1.2, z: center.z + 0.01 };
-        targetCenter = { x: center.x, y: center.y, z: center.z };
+        targetCam = { x: center.x, y: eyeY + dist * 1.1, z: center.z + 0.01 };
+        targetCenter = { x: center.x, y: eyeY, z: center.z };
         break;
       case "isometric":
-        targetCam = { x: center.x - dist * 0.7, y: center.y + dist * 0.25, z: center.z + dist * 0.7 };
-        targetCenter = { x: center.x, y: center.y, z: center.z };
+        targetCam = { x: center.x - dist * 0.7, y: eyeY + dist * 0.35, z: center.z + dist * 0.7 };
+        targetCenter = { x: center.x, y: eyeY, z: center.z };
         break;
       case "engine":
-        targetCam = { x: center.x - 0.7, y: center.y + 0.9, z: center.z + 1.4 };
-        targetCenter = { x: center.x - 0.8, y: center.y + 0.3, z: center.z };
+        targetCam = { x: center.x - 0.7, y: eyeY + 0.5, z: center.z + 1.2 };
+        targetCenter = { x: center.x - 0.8, y: eyeY, z: center.z };
         break;
       case "interior":
-        targetCam = { x: center.x + 0.2, y: center.y + 0.6, z: center.z + 0.7 };
-        targetCenter = { x: center.x, y: center.y + 0.5, z: center.z };
+        targetCam = { x: center.x + 0.2, y: eyeY + 0.4, z: center.z + 0.6 };
+        targetCenter = { x: center.x, y: eyeY + 0.3, z: center.z };
         break;
       case "wheels":
-        targetCam = { x: center.x - 1.0, y: center.y + 0.15, z: center.z + 1.9 };
-        targetCenter = { x: center.x - 1.35, y: center.y + 0.15, z: center.z };
+        targetCam = { x: center.x - 1.0, y: eyeY - 0.1, z: center.z + 1.6 };
+        targetCenter = { x: center.x - 1.35, y: eyeY - 0.1, z: center.z };
         break;
     }
-
 
     this.camera.position.set(targetCam.x, targetCam.y, targetCam.z);
     this.controls.target.set(targetCenter.x, targetCenter.y, targetCenter.z);

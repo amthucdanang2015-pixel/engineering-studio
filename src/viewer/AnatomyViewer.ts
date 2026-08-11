@@ -221,14 +221,8 @@ export class AnatomyViewer {
       this.dirty = true;
     }
 
-    // Vehicle Rotation is STRICT YAW ONLY around world Y axis
-    // Pitch (rotation.x) and Roll (rotation.z) are strictly LOCKED to 0!
-    if (this.cameraController.isAutoRotate && !this.selectedMeshName) {
-      this.vehicleRoot.rotation.x = 0;
-      this.vehicleRoot.rotation.z = 0;
-      this.vehicleRoot.rotation.y += delta * 0.45;
-      this.dirty = true;
-    }
+    // Automatically hide solid plinth geometry when camera orbits below platform level for underbody inspection
+    this.lightingManager.updateCameraVisibility(this.camera.position.y, this.cameraController.target.y);
 
     if (this.assets.currentAsset?.mixer) {
       this.assets.currentAsset.mixer.update(delta);
@@ -304,18 +298,10 @@ export class AnatomyViewer {
 
   private onPointerMove = (event: PointerEvent) => {
     if (this.pointerId !== null) {
-      const dx = event.clientX - this.lastPointerX;
-      this.lastPointerX = event.clientX;
-
       if (Math.hypot(event.clientX - this.pointerStart.x, event.clientY - this.pointerStart.y) > 5) {
         this.dragged = true;
-        // Drag rotates ONLY VehicleRoot.rotation.y (Yaw only).
-        // Vertical drag introduces NO pitch or roll; rotation.x and rotation.z remain strictly 0!
-        this.vehicleRoot.rotation.x = 0;
-        this.vehicleRoot.rotation.z = 0;
-        this.vehicleRoot.rotation.y += dx * 0.008;
-        this.dirty = true;
       }
+      this.dirty = true;
       return;
     }
     // Use getBoundingClientRect offset for correct hover raycasting

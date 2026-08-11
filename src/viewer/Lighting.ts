@@ -85,6 +85,20 @@ export class LightingManager {
     this.environmentRoot.add(this.contactShadow);
   }
 
+  /**
+   * Hide platform and contact shadow when camera orbits below platform level
+   * to ensure crystal-clear, unobstructed view of vehicle undercarriage and chassis.
+   */
+  updateCameraVisibility(cameraY: number, targetY: number) {
+    const isBelowPlatform = cameraY < (targetY - 0.05);
+    if (this.plinth) {
+      this.plinth.visible = !isBelowPlatform;
+    }
+    if (this.contactShadow) {
+      this.contactShadow.visible = !isBelowPlatform;
+    }
+  }
+
   setAccentColor(color: string) {
     this.accentGlow.color.set(color);
   }
