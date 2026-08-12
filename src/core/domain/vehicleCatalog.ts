@@ -20,7 +20,7 @@ export const VEHICLE_CATALOG: VehicleCatalogItem[] = [
     type: "Electric Vehicle",
     description:
       "A compact electric rally hatch designed for agile handling with a lightweight chassis, responsive electric powertrain, and performance-focused body.",
-    modelPath: "/models/ESF_V2_Rally_Electric_Hatch_ThreeJS_YUp.glb",
+    modelPath: "/models/free_1975_porsche_911_930_turbo.glb",
     screenshotPath: "/images/ESF_V2_Rally_Electric_Hatch_ThreeJS_YUp.png",
     specs: {
       engine: "Dual-Motor EV",
@@ -35,7 +35,7 @@ export const VEHICLE_CATALOG: VehicleCatalogItem[] = [
     type: "Electric Vehicle",
     description:
       "A rugged electric pickup built for adventure with a modular chassis, high ground clearance, and versatile all-wheel-drive performance.",
-    modelPath: "/models/ESF_V2_Adventure_Electric_Pickup_ThreeJS_YUp.glb",
+    modelPath: "/models/pony_cartoon.glb",
     screenshotPath: "/images/ESF_V2_Adventure_Electric_Pickup_ThreeJS_YUp.png",
     specs: {
       engine: "Dual-Motor EV",
