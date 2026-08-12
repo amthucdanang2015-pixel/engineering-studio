@@ -244,16 +244,15 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
   };
 
   return (
-    <div className="min-h-dvh lg:h-dvh w-full flex flex-col overflow-y-auto lg:overflow-hidden bg-[#f7f4ed] text-stone-900 font-sans">
-
+    <div className="relative min-h-screen lg:h-[100dvh] lg:max-h-[100dvh] w-full bg-[#f4f6f9] text-slate-900 font-sans flex flex-col justify-between p-4 md:p-5 overflow-y-auto lg:overflow-hidden">
       {/* ── HEADER ──────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-30 h-[56px] min-h-[56px] shrink-0 flex items-center justify-between px-4 sm:px-5 border-b border-[#e8e2d5] bg-[#f7f4ed]">
+      <header className="esf-panel w-full flex items-center justify-between rounded-2xl px-5 py-3.5 shadow-sm bg-white/90 backdrop-blur-md border border-slate-200 mb-4 lg:mb-5 shrink-0">
         {/* Left: back button + vehicle name + active component pill */}
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => router.push("/build")}
-            className="h-8 w-8 rounded-full bg-white border border-[#e8e2d5] flex items-center justify-center text-stone-500 hover:text-[#e0564d] hover:border-[#e0564d] transition-colors shadow-2xs"
+            className="h-8 w-8 rounded-full bg-white border border-[#e8e2d5] flex items-center justify-center text-stone-500 hover:text-[#e0564d] hover:border-[#e0564d] hover:cursor-pointer transition-colors shadow-2xs"
             title="Return to Vehicle Selection"
           >
             <ArrowLeft size={15} />
