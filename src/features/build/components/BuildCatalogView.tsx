@@ -10,6 +10,7 @@ import {
   Gauge,
   Layers,
   Sparkles,
+  Wrench,
   Zap,
 } from "lucide-react";
 import { VEHICLE_CATALOG, getVehicleCatalogItem } from "@/core/domain/vehicleCatalog";
@@ -34,38 +35,26 @@ export const BuildCatalogView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-dvh lg:h-dvh w-full flex flex-col overflow-y-auto lg:overflow-hidden bg-[#f7f4ed] text-stone-900 font-sans">
-      {/* ── TOP HEADER NAVIGATION BAR ──────────────────────────────── */}
-      <header className="sticky top-0 z-30 h-[56px] min-h-[56px] shrink-0 flex items-center justify-between px-4 sm:px-5 border-b border-[#e8e2d5] bg-[#f7f4ed]">
+    <div className="relative min-h-screen w-full bg-[#f4f6f9] text-slate-900 font-sans flex flex-col justify-between p-4 md:p-6 overflow-y-auto">
+      <header className="esf-panel w-full flex items-center justify-between rounded-2xl px-5 py-3.5 shadow-sm bg-white/90 backdrop-blur-md border border-slate-200 mb-6 shrink-0">
         <div className="hidden md:flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#e0564d]/10 text-[#e0564d] border border-[#e0564d]/20">
-            <Activity size={18} />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f95738]/10 text-[#f95738] border border-[#f95738]/20">
+            <Wrench size={20} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-stone-400 font-mono">
-                ESF V2
-              </span>
-              <span className="text-stone-300">/</span>
-              <h1 className="text-xs font-black uppercase tracking-wider text-stone-900">
-                BASE VEHICLE CATALOG
-              </h1>
+              <span className="text-xs font-extrabold uppercase tracking-widest text-slate-400">ESF V2</span>
+              <span className="text-slate-300">/</span>
+              <h1 className="text-sm font-extrabold tracking-tight text-slate-900 uppercase">GARAGE</h1>
             </div>
-            <p className="text-[11px] text-stone-500 font-medium hidden lg:block">
-              Select a base vehicle architecture specimen to begin engineering.
+            <p className="text-[11px] text-slate-500 font-medium hidden sm:block">
+              View and manage your saved custom vehicle builds.
             </p>
           </div>
         </div>
 
-        {/* Mobile Header Branding */}
-        <div className="flex md:hidden items-center gap-2">
-          <span className="text-xs font-black uppercase tracking-wider text-stone-900 font-mono">
-            VEHICLE SPECIMEN
-          </span>
-        </div>
-
-        {/* Top Navigation with Mobile Library Trigger */}
-        <Navbar onOpenLibrary={() => setIsLibraryOpen(true)} />
+        {/* Top Navigation */}
+        <Navbar />
       </header>
 
       {/* ── MAIN STUDIO WORKSPACE LAYOUT ───────────────────────────── */}
