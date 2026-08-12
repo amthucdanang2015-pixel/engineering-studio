@@ -27,6 +27,7 @@ import type { PartMaterialConfig } from "@/core/domain/vehicle";
 import type { VehicleCustomization } from "@/core/domain/vehicleCustomization";
 
 import { VehicleLibrarySheet } from "./VehicleLibrarySheet";
+import { BuildOnboardingHint } from "./BuildOnboardingHint";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BUILD WORKSPACE CONTENT
@@ -289,6 +290,12 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
           <div
             ref={mountRef}
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+          />
+
+          {/* First-time onboarding hint — appears after load, gone after first selection */}
+          <BuildOnboardingHint
+            modelLoaded={!loading}
+            partSelected={!!selectedPart}
           />
 
           {/* Hover name chip */}
