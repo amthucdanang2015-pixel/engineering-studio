@@ -10,7 +10,6 @@ import {
   Gauge,
   Layers,
   Sparkles,
-  Wrench,
   Zap,
 } from "lucide-react";
 import { VEHICLE_CATALOG, getVehicleCatalogItem } from "@/core/domain/vehicleCatalog";
@@ -35,33 +34,45 @@ export const BuildCatalogView: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-[#f4f6f9] text-slate-900 font-sans flex flex-col justify-between p-4 md:p-6 overflow-y-auto">
-      <header className="esf-panel w-full flex items-center justify-between rounded-2xl px-5 py-3.5 shadow-sm bg-white/90 backdrop-blur-md border border-slate-200 mb-6 shrink-0">
+    <div className="min-h-screen lg:h-[100dvh] lg:max-h-[100dvh] w-full flex flex-col overflow-y-auto lg:overflow-hidden bg-[#f7f4ed] text-stone-900 font-sans">
+      {/* ── TOP HEADER NAVIGATION BAR ──────────────────────────────── */}
+      <header className="sticky top-0 z-30 h-[56px] min-h-[56px] shrink-0 flex items-center justify-between px-4 sm:px-5 border-b border-[#e8e2d5] bg-[#f7f4ed]">
         <div className="hidden md:flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f95738]/10 text-[#f95738] border border-[#f95738]/20">
-            <Wrench size={20} />
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#e0564d]/10 text-[#e0564d] border border-[#e0564d]/20">
+            <Activity size={18} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-extrabold uppercase tracking-widest text-slate-400">ESF V2</span>
-              <span className="text-slate-300">/</span>
-              <h1 className="text-sm font-extrabold tracking-tight text-slate-900 uppercase">GARAGE</h1>
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-stone-400 font-mono">
+                ESF V2
+              </span>
+              <span className="text-stone-300">/</span>
+              <h1 className="text-xs font-black uppercase tracking-wider text-stone-900">
+                BASE VEHICLE CATALOG
+              </h1>
             </div>
-            <p className="text-[11px] text-slate-500 font-medium hidden sm:block">
-              View and manage your saved custom vehicle builds.
+            <p className="text-[11px] text-stone-500 font-medium hidden lg:block">
+              Select a base vehicle architecture specimen to begin engineering.
             </p>
           </div>
         </div>
 
-        {/* Top Navigation */}
-        <Navbar />
+        {/* Mobile Header Branding */}
+        <div className="flex md:hidden items-center gap-2">
+          <span className="text-xs font-black uppercase tracking-wider text-stone-900 font-mono">
+            VEHICLE SPECIMEN
+          </span>
+        </div>
+
+        {/* Top Navigation with Mobile Library Trigger */}
+        <Navbar onOpenLibrary={() => setIsLibraryOpen(true)} />
       </header>
 
       {/* ── MAIN STUDIO WORKSPACE LAYOUT ───────────────────────────── */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-visible lg:overflow-hidden min-h-0">
+      <div className="flex-1 flex flex-col lg:flex-row min-h-0 lg:h-[calc(100dvh-56px)] overflow-visible lg:overflow-hidden">
 
         {/* ── LEFT SIDEBAR: BASE VEHICLE LIBRARY (Desktop only: hidden lg:flex) ── */}
-        <aside className="hidden lg:flex w-full lg:w-72 xl:w-80 shrink-0 flex-col border-b lg:border-b-0 lg:border-r border-[#e8e2d5] bg-[#f7f4ed]">
+        <aside className="hidden lg:flex w-full lg:w-72 xl:w-80 shrink-0 flex-col border-b lg:border-b-0 lg:border-r border-[#e8e2d5] bg-[#f7f4ed] h-full min-h-0 overflow-hidden">
           {/* Library Panel Header */}
           <div className="p-4 sm:px-5 py-3.5 border-b border-[#e8e2d5] flex items-center justify-between bg-[#f7f4ed] shrink-0">
             <div>
@@ -78,7 +89,7 @@ export const BuildCatalogView: React.FC = () => {
           </div>
 
           {/* Model Specimen List */}
-          <div className="p-3 sm:p-4 space-y-2.5 overflow-y-auto lg:flex-1">
+          <div className="p-3 sm:p-4 space-y-2.5 overflow-y-auto flex-1 min-h-0">
             {VEHICLE_CATALOG.map((vehicle) => {
               const isSelected = vehicle.id === selectedVehicle.id;
               const imgUrl = vehicle.screenshotPath || null;
@@ -87,15 +98,17 @@ export const BuildCatalogView: React.FC = () => {
                   key={vehicle.id}
                   type="button"
                   onClick={() => handleSelectVehicle(vehicle.id)}
-                  className={`w-full text-left p-3 rounded-2xl transition-all border flex items-center gap-3 group relative cursor-pointer ${isSelected
-                    ? "bg-white border-[#e0564d] shadow-xs ring-1 ring-[#e0564d]/30"
-                    : "bg-white/60 hover:bg-white border-stone-200/90 hover:border-stone-300 shadow-2xs"
-                    }`}
+                  className={`w-full text-left p-3 rounded-2xl transition-all border flex items-center gap-3 group relative cursor-pointer ${
+                    isSelected
+                      ? "bg-white border-[#e0564d] shadow-xs ring-1 ring-[#e0564d]/30"
+                      : "bg-white/60 hover:bg-white border-stone-200/90 hover:border-stone-300 shadow-2xs"
+                  }`}
                 >
                   {/* Vehicle Thumbnail */}
                   <div
-                    className={`flex h-13 w-16 shrink-0 items-center justify-center rounded-xl overflow-hidden border transition-colors ${isSelected ? "border-[#e0564d]/30 bg-stone-50" : "border-stone-200 bg-stone-100"
-                      }`}
+                    className={`flex h-13 w-16 shrink-0 items-center justify-center rounded-xl overflow-hidden border transition-colors ${
+                      isSelected ? "border-[#e0564d]/30 bg-stone-50" : "border-stone-200 bg-stone-100"
+                    }`}
                   >
                     {imgUrl ? (
                       <img
@@ -136,7 +149,7 @@ export const BuildCatalogView: React.FC = () => {
         </aside>
 
         {/* ── RIGHT MAIN WORKSPACE: 3D SPECIMEN VIEWER & DETAILS ───── */}
-        <main className="flex-1 flex flex-col lg:flex-row overflow-visible lg:overflow-hidden relative bg-[#f7f4ed] p-3 sm:p-4 lg:p-5 gap-4 sm:gap-5 min-h-0">
+        <main className="flex-1 flex flex-col lg:flex-row overflow-visible lg:overflow-hidden relative bg-[#f7f4ed] p-3 sm:p-4 lg:p-4 gap-3 sm:gap-4 lg:gap-4 min-h-0 h-full">
 
           {/* 3D Vehicle Viewport Hero Area - Fills available workspace height on desktop */}
           <div className="w-full lg:flex-1 h-[60vh] min-h-[340px] max-h-[520px] lg:max-h-none lg:h-full relative rounded-2xl overflow-hidden border border-[#e8e2d5] bg-[#f2ebd9] p-2 sm:p-3 touch-pan-y shrink-0 lg:shrink flex flex-col">
@@ -158,10 +171,10 @@ export const BuildCatalogView: React.FC = () => {
           </div>
 
           {/* Selected Vehicle Specimen Info & Action Panel - Positioned below 3D viewer on mobile */}
-          <div className="w-full lg:w-[340px] xl:w-[380px] shrink-0 border border-[#e8e2d5] bg-[#f7f4ed] rounded-2xl p-5 sm:p-6 flex flex-col justify-between overflow-y-auto">
+          <div className="w-full lg:w-[320px] xl:w-[360px] shrink-0 border border-[#e8e2d5] bg-[#f7f4ed] rounded-2xl p-4 sm:p-5 flex flex-col justify-between overflow-y-auto min-h-0 h-auto lg:h-full">
             <div>
               {/* Header Badge */}
-              <div className="flex items-center justify-between gap-2 mb-3">
+              <div className="flex items-center justify-between gap-2 mb-2.5">
                 <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#e0564d] bg-[#e0564d]/10 px-2.5 py-1 rounded-md border border-[#e0564d]/20 font-mono">
                   ACTIVE BASE SPECIMEN
                 </span>
@@ -172,12 +185,12 @@ export const BuildCatalogView: React.FC = () => {
                 {selectedVehicle.name}
               </h2>
 
-              <p className="text-xs text-stone-600 leading-relaxed mb-6 font-medium">
+              <p className="text-xs text-stone-600 leading-relaxed mb-5 font-medium">
                 {selectedVehicle.description}
               </p>
 
               {/* Specifications Grid */}
-              <div className="space-y-3.5 mb-6">
+              <div className="space-y-3 mb-4">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-extrabold uppercase tracking-wider text-stone-400 font-mono">
                     SPECIFICATION METRICS
@@ -185,9 +198,9 @@ export const BuildCatalogView: React.FC = () => {
                   <span className="text-[10px] text-stone-400 font-mono">ESF V2 ARCHITECTURE</span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div className="bg-white p-3 rounded-xl border border-[#e8e2d5] shadow-2xs">
-                    <div className="flex items-center gap-1.5 text-stone-400 mb-1">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-white p-2.5 rounded-xl border border-[#e8e2d5] shadow-2xs">
+                    <div className="flex items-center gap-1.5 text-stone-400 mb-0.5">
                       <Cpu size={13} className="text-[#e0564d]" />
                       <span className="text-[9px] font-extrabold uppercase tracking-wider">Powertrain</span>
                     </div>
@@ -196,8 +209,8 @@ export const BuildCatalogView: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className="bg-white p-3 rounded-xl border border-[#e8e2d5] shadow-2xs">
-                    <div className="flex items-center gap-1.5 text-stone-400 mb-1">
+                  <div className="bg-white p-2.5 rounded-xl border border-[#e8e2d5] shadow-2xs">
+                    <div className="flex items-center gap-1.5 text-stone-400 mb-0.5">
                       <Zap size={13} className="text-[#e0564d]" />
                       <span className="text-[9px] font-extrabold uppercase tracking-wider">Output</span>
                     </div>
@@ -206,8 +219,8 @@ export const BuildCatalogView: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className="bg-white p-3 rounded-xl border border-[#e8e2d5] shadow-2xs">
-                    <div className="flex items-center gap-1.5 text-stone-400 mb-1">
+                  <div className="bg-white p-2.5 rounded-xl border border-[#e8e2d5] shadow-2xs">
+                    <div className="flex items-center gap-1.5 text-stone-400 mb-0.5">
                       <Gauge size={13} className="text-[#e0564d]" />
                       <span className="text-[9px] font-extrabold uppercase tracking-wider">Total Weight</span>
                     </div>
@@ -216,8 +229,8 @@ export const BuildCatalogView: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className="bg-white p-3 rounded-xl border border-[#e8e2d5] shadow-2xs">
-                    <div className="flex items-center gap-1.5 text-stone-400 mb-1">
+                  <div className="bg-white p-2.5 rounded-xl border border-[#e8e2d5] shadow-2xs">
+                    <div className="flex items-center gap-1.5 text-stone-400 mb-0.5">
                       <Layers size={13} className="text-[#e0564d]" />
                       <span className="text-[9px] font-extrabold uppercase tracking-wider">Drivetrain</span>
                     </div>
@@ -230,7 +243,7 @@ export const BuildCatalogView: React.FC = () => {
             </div>
 
             {/* Start Building Action CTA */}
-            <div className="pt-4 border-t border-[#e8e2d5]/80">
+            <div className="pt-3 border-t border-[#e8e2d5]/80 shrink-0 mt-3">
               <button
                 type="button"
                 onClick={handleStartBuilding}
@@ -254,4 +267,3 @@ export const BuildCatalogView: React.FC = () => {
     </div>
   );
 };
-
