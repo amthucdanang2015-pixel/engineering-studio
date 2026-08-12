@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { MousePointer2 } from "lucide-react";
+import { MoveDownRight } from "lucide-react";
 
 const STORAGE_KEY = "build-customization-onboarding-dismissed";
 
@@ -112,7 +112,7 @@ export const BuildOnboardingHint: React.FC<BuildOnboardingHintProps> = ({
           >
             {/* Icon badge */}
             <span className="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-xl bg-[#e0564d]/20 text-[#f5a623]">
-              <MousePointer2 size={16} />
+              <MoveDownRight size={16} />
             </span>
 
             {/* Text */}
