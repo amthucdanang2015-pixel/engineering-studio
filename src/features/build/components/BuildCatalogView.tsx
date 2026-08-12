@@ -43,12 +43,8 @@ export const BuildCatalogView: React.FC = () => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-stone-400 font-mono">
-                ESF V2
-              </span>
-              <span className="text-stone-300">/</span>
               <h1 className="text-xs font-black uppercase tracking-wider text-stone-900">
-                BASE VEHICLE CATALOG
+                VEHICLE SIMULATOR
               </h1>
             </div>
             <p className="text-[11px] text-stone-500 font-medium hidden lg:block">
@@ -98,17 +94,15 @@ export const BuildCatalogView: React.FC = () => {
                   key={vehicle.id}
                   type="button"
                   onClick={() => handleSelectVehicle(vehicle.id)}
-                  className={`w-full text-left p-3 rounded-2xl transition-all border flex items-center gap-3 group relative cursor-pointer ${
-                    isSelected
-                      ? "bg-white border-[#e0564d] shadow-xs ring-1 ring-[#e0564d]/30"
-                      : "bg-white/60 hover:bg-white border-stone-200/90 hover:border-stone-300 shadow-2xs"
-                  }`}
+                  className={`w-full text-left p-3 rounded-2xl transition-all border flex items-center gap-3 group relative cursor-pointer ${isSelected
+                    ? "bg-white border-[#e0564d] shadow-xs ring-1 ring-[#e0564d]/30"
+                    : "bg-white/60 hover:bg-white border-stone-200/90 hover:border-stone-300 shadow-2xs"
+                    }`}
                 >
                   {/* Vehicle Thumbnail */}
                   <div
-                    className={`flex h-13 w-16 shrink-0 items-center justify-center rounded-xl overflow-hidden border transition-colors ${
-                      isSelected ? "border-[#e0564d]/30 bg-stone-50" : "border-stone-200 bg-stone-100"
-                    }`}
+                    className={`flex h-13 w-16 shrink-0 items-center justify-center rounded-xl overflow-hidden border transition-colors ${isSelected ? "border-[#e0564d]/30 bg-stone-50" : "border-stone-200 bg-stone-100"
+                      }`}
                   >
                     {imgUrl ? (
                       <img

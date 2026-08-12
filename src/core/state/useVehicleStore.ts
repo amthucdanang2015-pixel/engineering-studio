@@ -1,261 +1,24 @@
 import { create } from "zustand";
 import type { PartMaterialConfig, VehiclePartData, ViewPreset, PartCategory } from "../domain/vehicle";
+import type { VehicleCustomization } from "../domain/vehicleCustomization";
+import { DEFAULT_VEHICLE_CUSTOMIZATION } from "../domain/vehicleCustomization";
+import type { VehicleCapabilities } from "../domain/vehicleCapabilities";
+import { EMPTY_VEHICLE_CAPABILITIES } from "../domain/vehicleCapabilities";
 
-export const VEHICLE_PARTS_DATA: VehiclePartData[] = [
-  // BODY
-  {
-    id: "body-main",
-    name: "Body Shell",
-    category: "BODY",
-    meshName: "Body_Main",
-    description: "Aerodynamic composite monocoque body panels engineered for optimal downforce.",
-    specs: { Material: "Carbon-Fiber Reinforced Polymer", Weight: "145 kg", "Drag Coeff": "0.28 Cd" },
-    defaultMaterial: { color: "#f95738", roughness: 0.25, metalness: 0.7, opacity: 1, transparent: false, wireframe: false },
-    accentColor: "#f95738",
-  },
-  {
-    id: "body-front-fascia",
-    name: "Front Fascia",
-    category: "BODY",
-    meshName: "Body_Front_Fascia",
-    description: "Front aerodynamic fascia directing airflow into cooling ducts.",
-    specs: { Material: "Carbon Prepreg" },
-    defaultMaterial: { color: "#f95738", roughness: 0.25, metalness: 0.7, opacity: 1, transparent: false, wireframe: false },
-  },
-  {
-    id: "hood",
-    name: "Front Hood",
-    category: "BODY",
-    meshName: "Hood",
-    description: "Lightweight front bonnet with extraction vents.",
-    specs: { Material: "Carbon Composite", Weight: "14 kg" },
-    defaultMaterial: { color: "#f95738", roughness: 0.25, metalness: 0.7, opacity: 1, transparent: false, wireframe: false },
-  },
-  {
-    id: "front-bumper",
-    name: "Front Bumper",
-    category: "BODY",
-    meshName: "Front_Bumper",
-    description: "Front impact bumper structure with air intakes.",
-    specs: { Impact: "SAE J264 Compliant" },
-    defaultMaterial: { color: "#111827", roughness: 0.4, metalness: 0.5, opacity: 1, transparent: false, wireframe: false },
-  },
-  {
-    id: "front-splitter",
-    name: "Front Splitter",
-    category: "BODY",
-    meshName: "Front_Splitter",
-    description: "Ground-effect front splitter generating front axle downforce.",
-    specs: { Downforce: "65 kg @ 160 km/h" },
-    defaultMaterial: { color: "#111827", roughness: 0.3, metalness: 0.6, opacity: 1, transparent: false, wireframe: false },
-  },
-  {
-    id: "windshield",
-    name: "Windshield Glass",
-    category: "BODY",
-    meshName: "Windshield",
-    description: "Laminated acoustic safety windshield with hydrophobic coating.",
-    specs: { Thickness: "3.5 mm", "UV Cut": "99.8%" },
-    defaultMaterial: { color: "#a8dadc", roughness: 0.1, metalness: 0.1, opacity: 0.4, transparent: true, wireframe: false },
-  },
-  {
-    id: "led-headlight-left",
-    name: "LED Headlight Left",
-    category: "BODY",
-    meshName: "LED_Headlight_Left",
-    description: "Adaptive Matrix LED headlight unit.",
-    specs: { Luminous: "3,200 Lumens" },
-    defaultMaterial: { color: "#ffffff", roughness: 0.1, metalness: 0.9, opacity: 1, transparent: false, wireframe: false },
-  },
-  {
-    id: "led-headlight-right",
-    name: "LED Headlight Right",
-    category: "BODY",
-    meshName: "LED_Headlight_Right",
-    description: "Adaptive Matrix LED headlight unit.",
-    specs: { Luminous: "3,200 Lumens" },
-    defaultMaterial: { color: "#ffffff", roughness: 0.1, metalness: 0.9, opacity: 1, transparent: false, wireframe: false },
-  },
-  {
-    id: "rear-deck",
-    name: "Rear Deck Cover",
-    category: "BODY",
-    meshName: "Rear_Deck",
-    description: "Ventilated rear engine bay deck lid.",
-    specs: { Material: "Carbon Composite" },
-    defaultMaterial: { color: "#f95738", roughness: 0.25, metalness: 0.7, opacity: 1, transparent: false, wireframe: false },
-  },
-  {
-    id: "rear-spoiler-blade",
-    name: "Rear Spoiler Blade",
-    category: "BODY",
-    meshName: "Rear_Spoiler_Blade",
-    description: "High-downforce active rear wing blade.",
-    specs: { Downforce: "180 kg @ 200 km/h" },
-    defaultMaterial: { color: "#111827", roughness: 0.3, metalness: 0.5, opacity: 1, transparent: false, wireframe: false },
-  },
+// ─────────────────────────────────────────────────────────────────────────────
+// Legacy VEHICLE_PARTS_DATA — kept only for the Part Inspector click flow.
+// These are NOT used for the semantic customization system.
+// The real mesh names are discovered dynamically from the loaded GLB.
+// ─────────────────────────────────────────────────────────────────────────────
+export const VEHICLE_PARTS_DATA: VehiclePartData[] = [];
 
-  // COCKPIT
-  {
-    id: "dashboard",
-    name: "Dashboard Console",
-    category: "COCKPIT",
-    meshName: "Dashboard",
-    description: "Digital instrument cluster dashboard upholstered in Alcantara.",
-    specs: { Display: "12.3\" HD Telemetry Screen" },
-    defaultMaterial: { color: "#1e293b", roughness: 0.6, metalness: 0.2, opacity: 1, transparent: false, wireframe: false },
-  },
-  {
-    id: "steering-wheel",
-    name: "Steering Wheel",
-    category: "COCKPIT",
-    meshName: "Steering_Wheel",
-    description: "Multifunction sport steering wheel with paddle shifters.",
-    specs: { Trim: "Perforated Leather & Carbon" },
-    defaultMaterial: { color: "#0f172a", roughness: 0.5, metalness: 0.3, opacity: 1, transparent: false, wireframe: false },
-  },
-  {
-    id: "seat-left-base",
-    name: "Driver Seat Base",
-    category: "COCKPIT",
-    meshName: "Seat_Left_Base",
-    description: "Driver carbon bucket seat cushion.",
-    specs: { Material: "Nappa Leather & Memory Foam" },
-    defaultMaterial: { color: "#334155", roughness: 0.6, metalness: 0.1, opacity: 1, transparent: false, wireframe: false },
-  },
-  {
-    id: "seat-left-back",
-    name: "Driver Seat Backrest",
-    category: "COCKPIT",
-    meshName: "Seat_Left_Back",
-    description: "Driver carbon bucket seat backrest with side bolsters.",
-    specs: { Shell: "Carbon Fiber Monocoque" },
-    defaultMaterial: { color: "#334155", roughness: 0.6, metalness: 0.1, opacity: 1, transparent: false, wireframe: false },
-  },
-  {
-    id: "seat-right-base",
-    name: "Passenger Seat Base",
-    category: "COCKPIT",
-    meshName: "Seat_Right_Base",
-    description: "Passenger sport seat cushion.",
-    specs: { Material: "Nappa Leather" },
-    defaultMaterial: { color: "#334155", roughness: 0.6, metalness: 0.1, opacity: 1, transparent: false, wireframe: false },
-  },
-  {
-    id: "seat-right-back",
-    name: "Passenger Seat Backrest",
-    category: "COCKPIT",
-    meshName: "Seat_Right_Back",
-    description: "Passenger sport seat backrest.",
-    specs: { Shell: "Carbon Fiber" },
-    defaultMaterial: { color: "#334155", roughness: 0.6, metalness: 0.1, opacity: 1, transparent: false, wireframe: false },
-  },
-
-  // POWER
-  {
-    id: "engine-block",
-    name: "Twin-Turbo V8 Engine Block",
-    category: "POWER",
-    meshName: "Engine_Block",
-    description: "4.0L twin-turbocharged V8 engine block.",
-    specs: { Output: "720 HP @ 7,500 RPM", Torque: "770 Nm" },
-    defaultMaterial: { color: "#94a3b8", roughness: 0.3, metalness: 0.9, opacity: 1, transparent: false, wireframe: false },
-  },
-  {
-    id: "engine-cover",
-    name: "Engine Intake Cover",
-    category: "POWER",
-    meshName: "Engine_Cover",
-    description: "Carbon intake plenum cover with red accent valve trims.",
-    specs: { Material: "Dry Carbon Fiber" },
-    defaultMaterial: { color: "#b7094c", roughness: 0.3, metalness: 0.7, opacity: 1, transparent: false, wireframe: false },
-  },
-  {
-    id: "exhaust-left",
-    name: "Exhaust Pipe Left",
-    category: "POWER",
-    meshName: "Exhaust_Left",
-    description: "Titanium performance exhaust tailpipe.",
-    specs: { Material: "Grade 5 Titanium" },
-    defaultMaterial: { color: "#cbd5e1", roughness: 0.2, metalness: 0.95, opacity: 1, transparent: false, wireframe: false },
-  },
-
-  // CHASSIS
-  {
-    id: "chassis-frame",
-    name: "Spaceframe Chassis",
-    category: "CHASSIS",
-    meshName: "Chassis_Frame",
-    description: "Extruded aluminum spaceframe chassis floorpan & subframe assembly.",
-    specs: { Stiffness: "38,000 Nm/deg", Material: "Aluminum Alloy" },
-    defaultMaterial: { color: "#1e293b", roughness: 0.5, metalness: 0.8, opacity: 1, transparent: false, wireframe: false },
-  },
-
-  // WHEELS
-  {
-    id: "wheel-front-left",
-    name: "Front-Left Forged Rim",
-    category: "WHEELS",
-    meshName: "Wheel_Front_Left",
-    description: "Front-left forged magnesium alloy 5-spoke wheel rim & tire assembly.",
-    specs: { Size: "19 x 9.5J", Tire: "265/35 ZR19 Semi-Slick" },
-    defaultMaterial: { color: "#f8fafc", roughness: 0.15, metalness: 0.95, opacity: 1, transparent: false, wireframe: false },
-  },
-  {
-    id: "wheel-front-right",
-    name: "Front-Right Forged Rim",
-    category: "WHEELS",
-    meshName: "Wheel_Front_Right",
-    description: "Front-right forged magnesium alloy wheel assembly.",
-    specs: { Size: "19 x 9.5J", Tire: "265/35 ZR19 Semi-Slick" },
-    defaultMaterial: { color: "#f8fafc", roughness: 0.15, metalness: 0.95, opacity: 1, transparent: false, wireframe: false },
-  },
-  {
-    id: "wheel-rear-left",
-    name: "Rear-Left Forged Rim",
-    category: "WHEELS",
-    meshName: "Wheel_Rear_Left",
-    description: "Rear-left forged magnesium alloy wheel assembly.",
-    specs: { Size: "20 x 11.0J", Tire: "305/30 ZR20 Semi-Slick" },
-    defaultMaterial: { color: "#f8fafc", roughness: 0.15, metalness: 0.95, opacity: 1, transparent: false, wireframe: false },
-  },
-  {
-    id: "wheel-rear-right",
-    name: "Rear-Right Forged Rim",
-    category: "WHEELS",
-    meshName: "Wheel_Rear_Right",
-    description: "Rear-right forged magnesium alloy wheel assembly.",
-    specs: { Size: "20 x 11.0J", Tire: "305/30 ZR20 Semi-Slick" },
-    defaultMaterial: { color: "#f8fafc", roughness: 0.15, metalness: 0.95, opacity: 1, transparent: false, wireframe: false },
-  },
-];
-
-interface VehicleState {
-  selectedVehicleId: string;
-  selectedMeshName: string | null;
-  selectedPart: VehiclePartData | null;
-  hoveredMeshName: string | null;
-  materialOverrides: Record<string, Partial<PartMaterialConfig>>;
-  activeTool: string | null;
-  autoRotate: boolean;
-  activeViewPreset: ViewPreset;
-  availableMeshNames: string[];
-
-  setSelectedVehicleId: (id: string) => void;
-  setAvailableMeshNames: (names: string[]) => void;
-  setSelectedMesh: (meshName: string | null) => void;
-  setHoveredMesh: (meshName: string | null) => void;
-  updatePartMaterial: (meshName: string, config: Partial<PartMaterialConfig>) => void;
-  setMaterialOverrides: (overrides: Record<string, Partial<PartMaterialConfig>>) => void;
-  setActiveTool: (tool: string | null) => void;
-  setAutoRotate: (enabled: boolean) => void;
-  setPresetView: (preset: ViewPreset) => void;
-}
-
+// ─────────────────────────────────────────────────────────────────────────────
+// Infer category from raw GLB mesh names (fallback for unknown meshes)
+// ─────────────────────────────────────────────────────────────────────────────
 function inferCategoryFromMeshName(meshName: string): PartCategory {
   const lower = meshName.toLowerCase();
   if (lower.includes("wheel") || lower.includes("tire") || lower.includes("rim") || lower.includes("hub") || lower.includes("cap")) return "WHEELS";
-  if (lower.includes("seat") || lower.includes("dash") || lower.includes("steering") || lower.includes("cockpit")) return "COCKPIT";
+  if (lower.includes("seat") || lower.includes("dash") || lower.includes("steering") || lower.includes("cockpit") || lower.includes("interior")) return "COCKPIT";
   if (lower.includes("engine") || lower.includes("valve") || lower.includes("exhaust") || lower.includes("power")) return "POWER";
   if (lower.includes("chassis") || lower.includes("frame") || lower.includes("rail") || lower.includes("floor")) return "CHASSIS";
   return "BODY";
@@ -263,65 +26,104 @@ function inferCategoryFromMeshName(meshName: string): PartCategory {
 
 export function getPartByMeshName(meshName: string | null): VehiclePartData | null {
   if (!meshName) return null;
-  const exactPart = VEHICLE_PARTS_DATA.find((p) => p.meshName === meshName);
-  return (
-    exactPart ?? {
-      id: meshName.toLowerCase().replace(/_/g, "-"),
-      name: meshName.replace(/_/g, " "),
-      category: inferCategoryFromMeshName(meshName),
-      meshName: meshName,
-      description: `Selected GLB component: ${meshName.replace(/_/g, " ")}.`,
-      specs: { "Node ID": meshName, Status: "Active Mesh" },
-      defaultMaterial: {
-        color: "#f95738",
-        roughness: 0.3,
-        metalness: 0.6,
-        opacity: 1,
-        transparent: false,
-        wireframe: false,
-      },
-    }
-  );
+  return {
+    id: meshName.toLowerCase().replace(/_/g, "-").replace(/\s+/g, "-"),
+    name: meshName.replace(/_/g, " "),
+    category: inferCategoryFromMeshName(meshName),
+    meshName: meshName,
+    description: `Selected GLB component: ${meshName.replace(/_/g, " ")}. Adjust material finish, paint color, roughness, metalness below.`,
+    specs: { "Node ID": meshName, Status: "Active Mesh" },
+    defaultMaterial: {
+      color: "#888888",
+      roughness: 0.4,
+      metalness: 0.5,
+      opacity: 1,
+      transparent: false,
+      wireframe: false,
+    },
+  };
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Store interface
+// ─────────────────────────────────────────────────────────────────────────────
+interface VehicleState {
+  selectedVehicleId: string;
+  selectedMeshName: string | null;
+  selectedPart: VehiclePartData | null;
+  hoveredMeshName: string | null;
 
+  /**
+   * Per-mesh fine-grained overrides — set by the Part Inspector click flow.
+   * Separate from the semantic vehicleCustomization state.
+   */
+  materialOverrides: Record<string, Partial<PartMaterialConfig>>;
 
+  /**
+   * The primary semantic customization state — plain serializable JSON.
+   * No Three.js objects live here.
+   */
+  vehicleCustomization: VehicleCustomization;
+
+  /**
+   * Capability report generated by GlbAnalyzer for the currently loaded asset.
+   * null until the first model finishes loading.
+   * Drives which sections the CustomizePanel renders.
+   */
+  vehicleCapabilities: VehicleCapabilities;
+
+  activeTool: string | null;
+  autoRotate: boolean;
+  activeViewPreset: ViewPreset;
+  availableMeshNames: string[];
+  /** @deprecated Use vehicleCapabilities.allMaterials instead */
+  materialInventory: string[];
+
+  setSelectedVehicleId: (id: string) => void;
+  setAvailableMeshNames: (names: string[]) => void;
+  setMaterialInventory: (names: string[]) => void;
+  setVehicleCapabilities: (caps: VehicleCapabilities) => void;
+  setSelectedMesh: (meshName: string | null) => void;
+  setHoveredMesh: (meshName: string | null) => void;
+  updatePartMaterial: (meshName: string, config: Partial<PartMaterialConfig>) => void;
+  setMaterialOverrides: (overrides: Record<string, Partial<PartMaterialConfig>>) => void;
+
+  /** Update the semantic customization state (partial merge) */
+  setVehicleCustomization: (c: Partial<VehicleCustomization>) => void;
+  /** Reset the semantic customization state to defaults */
+  resetVehicleCustomization: () => void;
+
+  setActiveTool: (tool: string | null) => void;
+  setAutoRotate: (enabled: boolean) => void;
+  setPresetView: (preset: ViewPreset) => void;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Store implementation
+// ─────────────────────────────────────────────────────────────────────────────
 export const useVehicleStore = create<VehicleState>((set) => ({
-  selectedVehicleId: "classic-sports-car",
+  selectedVehicleId: "electric-hatch-05",
   selectedMeshName: null,
   selectedPart: null,
   hoveredMeshName: null,
   materialOverrides: {},
+  vehicleCustomization: DEFAULT_VEHICLE_CUSTOMIZATION,
+  vehicleCapabilities: EMPTY_VEHICLE_CAPABILITIES,
   activeTool: null,
   autoRotate: false,
   activeViewPreset: "side",
   availableMeshNames: [],
+  materialInventory: [],
 
   setSelectedVehicleId: (id) => set({ selectedVehicleId: id }),
   setAvailableMeshNames: (names) => set({ availableMeshNames: names }),
+  setMaterialInventory: (names) => set({ materialInventory: names }),
+  setVehicleCapabilities: (caps) => set({ vehicleCapabilities: caps }),
 
   setSelectedMesh: (meshName) =>
     set(() => {
       if (!meshName) return { selectedMeshName: null, selectedPart: null };
-
-      const exactPart = VEHICLE_PARTS_DATA.find((p) => p.meshName === meshName);
-      const part: VehiclePartData = exactPart ?? {
-        id: meshName.toLowerCase().replace(/_/g, "-"),
-        name: meshName.replace(/_/g, " "),
-        category: inferCategoryFromMeshName(meshName),
-        meshName: meshName,
-        description: `Selected GLB component: ${meshName.replace(/_/g, " ")}. Adjust material finish, paint color, roughness, metalness below.`,
-        specs: { "Node ID": meshName, Status: "Active Mesh" },
-        defaultMaterial: {
-          color: "#f95738",
-          roughness: 0.3,
-          metalness: 0.6,
-          opacity: 1,
-          transparent: false,
-          wireframe: false,
-        },
-      };
-
+      const part = getPartByMeshName(meshName);
       return { selectedMeshName: meshName, selectedPart: part };
     }),
 
@@ -340,10 +142,37 @@ export const useVehicleStore = create<VehicleState>((set) => ({
 
   setMaterialOverrides: (overrides) => set({ materialOverrides: overrides }),
 
+  setVehicleCustomization: (c) =>
+    set((state) => ({
+      vehicleCustomization: deepMerge(state.vehicleCustomization, c),
+    })),
+
+  resetVehicleCustomization: () =>
+    set({ vehicleCustomization: DEFAULT_VEHICLE_CUSTOMIZATION }),
+
   setActiveTool: (tool) => set({ activeTool: tool }),
   setAutoRotate: (enabled) => set({ autoRotate: enabled }),
   setPresetView: (preset) => set({ activeViewPreset: preset }),
 }));
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Utilities
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Shallow-merge top-level keys but deep-merge nested objects one level */
+function deepMerge<T extends object>(base: T, patch: Partial<T>): T {
+  const result = { ...base };
+  for (const key in patch) {
+    const patchVal = patch[key];
+    const baseVal = base[key];
+    if (patchVal !== undefined && typeof patchVal === "object" && !Array.isArray(patchVal) && typeof baseVal === "object") {
+      (result as Record<string, unknown>)[key] = { ...(baseVal as object), ...(patchVal as object) };
+    } else if (patchVal !== undefined) {
+      (result as Record<string, unknown>)[key] = patchVal;
+    }
+  }
+  return result;
+}
 
 function areConfigsEqual(
   c1: Partial<PartMaterialConfig> = {},
@@ -378,3 +207,9 @@ export function isOverridesDirty(
   return false;
 }
 
+export function isCustomizationDirty(
+  current: VehicleCustomization,
+  saved: VehicleCustomization
+): boolean {
+  return JSON.stringify(current) !== JSON.stringify(saved);
+}

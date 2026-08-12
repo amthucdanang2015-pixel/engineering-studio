@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { ChevronRight, ChevronDown, Car, Cpu, Zap, Box, Disc } from "lucide-react";
-import { useVehicleStore, getPartByMeshName, VEHICLE_PARTS_DATA } from "@/core/state/useVehicleStore";
+import { useVehicleStore, getPartByMeshName } from "@/core/state/useVehicleStore";
 import type { VehiclePartData } from "@/core/domain/vehicle";
 
 const CATEGORY_META = {
@@ -30,12 +30,9 @@ export const AssemblyTreePanel: React.FC = () => {
 
   // Dynamically resolve actual loaded GLB mesh names into VehiclePartData objects
   const activePartsList: VehiclePartData[] = useMemo(() => {
-    if (availableMeshNames && availableMeshNames.length > 0) {
-      return availableMeshNames
-        .map((meshName) => getPartByMeshName(meshName))
-        .filter((part): part is VehiclePartData => part !== null);
-    }
-    return VEHICLE_PARTS_DATA;
+    return availableMeshNames
+      .map((meshName) => getPartByMeshName(meshName))
+      .filter((part): part is VehiclePartData => part !== null);
   }, [availableMeshNames]);
 
   return (

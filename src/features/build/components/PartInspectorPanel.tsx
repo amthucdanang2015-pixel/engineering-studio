@@ -1,11 +1,15 @@
 "use client";
 
 import React from "react";
-import { X, Paintbrush, Zap, Lightbulb, Box, RotateCcw, Save, CheckCircle2 } from "lucide-react";
+import { X, Paintbrush, Zap, Lightbulb, RotateCcw, Save, CheckCircle2 } from "lucide-react";
 import { useVehicleStore } from "@/core/state/useVehicleStore";
 import { PresetColorPalette } from "./PresetColorPalette";
+import { CustomizePanel } from "./CustomizePanel";
+import type { VehicleCapabilities } from "@/core/domain/vehicleCapabilities";
 
 interface PartInspectorPanelProps {
+  /** GlbAnalyzer capability report — drives which configurator sections are shown */
+  capabilities: VehicleCapabilities;
   onUpdateMaterial: (
     meshName: string,
     config: { color?: string; roughness?: number; metalness?: number; opacity?: number; wireframe?: boolean }
@@ -17,6 +21,7 @@ interface PartInspectorPanelProps {
 }
 
 export const PartInspectorPanel: React.FC<PartInspectorPanelProps> = ({
+  capabilities,
   onUpdateMaterial,
   onSave,
   onDiscard,
@@ -26,7 +31,7 @@ export const PartInspectorPanel: React.FC<PartInspectorPanelProps> = ({
   const { selectedPart, selectedMeshName, setSelectedMesh, materialOverrides, updatePartMaterial } =
     useVehicleStore();
 
-  // ── Action Footer buttons helper ──
+  // ── Action Footer ─────────────────────────────────────────────────────────
   const renderActionFooter = () => (
     <div className="shrink-0 p-3.5 border-t border-[#e8e2d5] bg-[#f7f4ed] flex items-center gap-2.5 z-10">
       <button
@@ -40,7 +45,7 @@ export const PartInspectorPanel: React.FC<PartInspectorPanelProps> = ({
         }
       >
         <RotateCcw size={13} className={isDirty ? "text-stone-500" : "text-stone-400"} />
-        <span>Discard</span>
+        <span>Reset</span>
       </button>
       <button
         type="button"
@@ -60,39 +65,25 @@ export const PartInspectorPanel: React.FC<PartInspectorPanelProps> = ({
     </div>
   );
 
-  // ── Empty state ─────────────────────────────
+  // ── Empty state → show CustomizePanel (global vehicle configurator) ────────
   if (!selectedPart || !selectedMeshName) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, background: "#f7f4ed" }}>
-        {/* Panel header */}
-        <div className="shrink-0 px-4 py-3 border-b border-[#e8e2d5]">
-          <span className="text-[9px] font-bold uppercase tracking-widest text-stone-400 block">Customize</span>
-          <h2 className="text-xs font-extrabold uppercase tracking-wider text-stone-800">Inspector</h2>
-        </div>
-        {/* Placeholder */}
-        <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
-          <div className="h-12 w-12 rounded-2xl bg-[#f2ebd9] border border-[#e8e2d5] flex items-center justify-center text-[#e0564d] mb-3">
-            <Box size={22} />
-          </div>
-          <p className="text-[11px] font-bold uppercase tracking-widest text-[#e0564d] mb-1">Inspector</p>
-          <p className="text-sm font-bold text-stone-800">No Component Selected</p>
-          <p className="text-xs text-stone-500 mt-1 leading-relaxed max-w-[200px]">
-            Click a component directly on the 3D vehicle to inspect and customize it.
-          </p>
-        </div>
-
-        {/* Action Footer */}
-        {renderActionFooter()}
-      </div>
+      <CustomizePanel
+        capabilities={capabilities}
+        onSave={onSave}
+        onDiscard={onDiscard}
+        isSaved={isSaved}
+        isDirty={isDirty}
+      />
     );
   }
 
-  // ── Material overrides ───────────────────────
+  // ── Part selected → per-mesh material editor ──────────────────────────────
   const overrides = materialOverrides[selectedMeshName] ?? {};
-  const currentColor    = overrides.color      ?? selectedPart.defaultMaterial.color;
-  const currentRoughness= overrides.roughness  ?? selectedPart.defaultMaterial.roughness;
-  const currentMetalness= overrides.metalness  ?? selectedPart.defaultMaterial.metalness;
-  const currentWireframe= overrides.wireframe  ?? selectedPart.defaultMaterial.wireframe;
+  const currentColor     = overrides.color      ?? selectedPart.defaultMaterial.color;
+  const currentRoughness = overrides.roughness  ?? selectedPart.defaultMaterial.roughness;
+  const currentMetalness = overrides.metalness  ?? selectedPart.defaultMaterial.metalness;
+  const currentWireframe = overrides.wireframe  ?? selectedPart.defaultMaterial.wireframe;
 
   const handleColor = (color: string) => {
     updatePartMaterial(selectedMeshName, { color });
@@ -116,8 +107,8 @@ export const PartInspectorPanel: React.FC<PartInspectorPanelProps> = ({
 
       {/* Panel header */}
       <div className="shrink-0 px-4 py-3 border-b border-[#e8e2d5]">
-        <span className="text-[9px] font-bold uppercase tracking-widest text-stone-400 block">Customize</span>
-        <h2 className="text-xs font-extrabold uppercase tracking-wider text-stone-800">Inspector</h2>
+        <span className="text-[9px] font-bold uppercase tracking-widest text-stone-400 block">Part Inspector</span>
+        <h2 className="text-xs font-extrabold uppercase tracking-wider text-stone-800">Component Detail</h2>
       </div>
 
       {/* Scrollable content */}
@@ -141,7 +132,7 @@ export const PartInspectorPanel: React.FC<PartInspectorPanelProps> = ({
               type="button"
               onClick={() => setSelectedMesh(null)}
               className="shrink-0 h-6 w-6 rounded-full bg-stone-100 flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-200 transition-colors"
-              title="Deselect"
+              title="Back to Configurator"
             >
               <X size={12} />
             </button>
@@ -221,20 +212,20 @@ export const PartInspectorPanel: React.FC<PartInspectorPanelProps> = ({
           <div className="bg-[#f5f3ff] border border-[#e9d5ff] rounded-xl p-3">
             <div className="flex items-center gap-1.5 text-[10px] font-bold text-purple-900 mb-1">
               <Zap size={11} className="text-purple-600" />
-              Engineering importance
+              Engineering Insight
             </div>
             <p className="text-[10px] text-purple-800 leading-relaxed">
-              Optimizes structural stiffness and aerodynamic stability during high-speed cornering dynamics.
+              Click the ✕ above to return to the vehicle configurator and adjust global paint, glass, and wheel settings.
             </p>
           </div>
 
           <div className="bg-[#fffbeb] border border-[#fde68a] rounded-xl p-3">
             <div className="flex items-center gap-1.5 text-[10px] font-bold text-amber-900 mb-1">
               <Lightbulb size={11} className="text-amber-500" />
-              Did you know
+              Note
             </div>
             <p className="text-[10px] text-amber-800 leading-relaxed">
-              Aerospace-grade carbon prepreg achieves one of the highest strength-to-weight ratios in engineering.
+              Part Inspector edits this component individually. Global paint changes will override these settings.
             </p>
           </div>
         </div>
@@ -245,5 +236,3 @@ export const PartInspectorPanel: React.FC<PartInspectorPanelProps> = ({
     </div>
   );
 };
-
-

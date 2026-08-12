@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { AnatomyViewer } from "@/viewer/AnatomyViewer";
 import { Box } from "lucide-react";
 import type { PartMaterialConfig } from "@/core/domain/vehicle";
-import { VEHICLE_PARTS_DATA } from "@/core/state/useVehicleStore";
 
 interface Garage3DPreviewProps {
   buildId: string;
@@ -64,11 +63,6 @@ export const Garage3DPreview: React.FC<Garage3DPreviewProps> = ({
       .then(() => {
         // Guard against race conditions: ignore if user selected another build while loading
         if (activeBuildIdRef.current !== targetBuildId) return;
-
-        // Reset all parts to default materials to ensure clean state
-        VEHICLE_PARTS_DATA.forEach((part) => {
-          viewer.updateMaterial(part.meshName, part.defaultMaterial);
-        });
 
         // Apply target build's material overrides
         if (materialOverrides && Object.keys(materialOverrides).length > 0) {

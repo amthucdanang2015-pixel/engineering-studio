@@ -6,26 +6,31 @@ import {
   ArrowLeft,
   Box,
   CheckCircle2,
-  Layers,
-  Sliders,
   X,
-  RotateCcw,
-  ZoomIn,
 } from "lucide-react";
 import { AnatomyViewer } from "@/viewer/AnatomyViewer";
-import { useVehicleStore, getPartByMeshName, VEHICLE_PARTS_DATA, isOverridesDirty } from "@/core/state/useVehicleStore";
+import {
+  useVehicleStore,
+  getPartByMeshName,
+  isOverridesDirty,
+  isCustomizationDirty,
+} from "@/core/state/useVehicleStore";
 import { getVehicleCatalogItem } from "@/core/domain/vehicleCatalog";
 import { PartInspectorPanel } from "./PartInspectorPanel";
 import { BuildCatalogView } from "./BuildCatalogView";
 import { Navbar } from "@/components/layout/Navbar";
 import { getSavedVehicleBuilds, saveVehicleBuild, type SavedVehicleBuild } from "@/core/state/savedBuilds";
+import { DEFAULT_VEHICLE_CUSTOMIZATION } from "@/core/domain/vehicleCustomization";
+import { EMPTY_VEHICLE_CAPABILITIES } from "@/core/domain/vehicleCapabilities";
+import { useGlbCustomization } from "../hooks/useGlbCustomization";
 import type { PartMaterialConfig } from "@/core/domain/vehicle";
+import type { VehicleCustomization } from "@/core/domain/vehicleCustomization";
 
 import { VehicleLibrarySheet } from "./VehicleLibrarySheet";
 
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // BUILD WORKSPACE CONTENT
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -57,16 +62,31 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
     selectedPart,
     hoveredMeshName,
     materialOverrides,
+    vehicleCustomization,
+    vehicleCapabilities,
     setMaterialOverrides,
+    setMaterialInventory,
     setAvailableMeshNames,
+    setVehicleCustomization,
+    setVehicleCapabilities,
+    resetVehicleCustomization,
   } = useVehicleStore();
 
   const hoveredPart = getPartByMeshName(hoveredMeshName);
-  const savedOverridesRef = useRef<Record<string, Partial<PartMaterialConfig>>>({});
 
-  // ── Init viewer ──────────────────────────────
+  /** Saved baseline refs — used for dirty checking and discard */
+  const savedOverridesRef = useRef<Record<string, Partial<PartMaterialConfig>>>({});
+  const savedCustomizationRef = useRef<VehicleCustomization>(DEFAULT_VEHICLE_CUSTOMIZATION);
+
+  // ── Wire the semantic customization adapter ─────────────────────────────────
+  // The adapter reads capabilities from the store — no vehicle ID, no hardcoded maps
+  useGlbCustomization(viewerRef, vehicleCapabilities, vehicleCustomization, loading);
+
+  // ── Init viewer ──────────────────────────────────────────────────────────────
   useEffect(() => {
     setAvailableMeshNames([]);
+    setMaterialInventory([]);
+    setVehicleCapabilities(EMPTY_VEHICLE_CAPABILITIES);
     if (!mountRef.current) return;
     let viewer: AnatomyViewer | null = null;
 
@@ -92,49 +112,74 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
       viewerRef.current = null;
       viewer?.dispose();
     };
-  }, [activeCatalogItem.modelPath, setSelectedMesh, setHoveredMesh, setAvailableMeshNames]);
+  }, [activeCatalogItem.modelPath, setSelectedMesh, setHoveredMesh, setAvailableMeshNames, setMaterialInventory, setVehicleCapabilities]);
 
-  // ── Sync buildId / vehicle searchParam / Initial overrides ──
+  // ── Sync buildId / vehicle param / Initial customization state ──────────────
   useEffect(() => {
     setSelectedMesh(null);
+
     if (buildIdParam) {
       const savedBuilds = getSavedVehicleBuilds();
       const existing = savedBuilds.find((b) => b.id === buildIdParam);
-      if (existing && existing.materialOverrides) {
-        console.log(`[Workspace Init] Vehicle: ${activeCatalogItem.id}, ModelPath: ${activeCatalogItem.modelPath}, Saved Customization: YES (ID: ${existing.id}), Overrides:`, existing.materialOverrides);
-        setMaterialOverrides(existing.materialOverrides);
-        savedOverridesRef.current = { ...existing.materialOverrides };
+      if (existing) {
+        // Restore saved semantic customization
+        if (existing.vehicleCustomization) {
+          setVehicleCustomization(existing.vehicleCustomization);
+          savedCustomizationRef.current = existing.vehicleCustomization;
+        }
+        // Restore legacy mesh overrides if present
+        if (existing.materialOverrides) {
+          setMaterialOverrides(existing.materialOverrides);
+          savedOverridesRef.current = { ...existing.materialOverrides };
+        }
         return;
       }
     }
-    // If no buildId param, initialize empty overrides baseline
-    console.log(`[Workspace Init] Vehicle: ${activeCatalogItem.id}, ModelPath: ${activeCatalogItem.modelPath}, Saved Customization: NO, Baseline: ORIGINAL GLB`);
+
+    // No saved build — reset to defaults
+    setVehicleCustomization(DEFAULT_VEHICLE_CUSTOMIZATION);
+    savedCustomizationRef.current = DEFAULT_VEHICLE_CUSTOMIZATION;
     setMaterialOverrides({});
     savedOverridesRef.current = {};
-  }, [buildIdParam, vehicleParam, activeCatalogItem, setSelectedMesh, setMaterialOverrides]);
+  }, [buildIdParam, vehicleParam, activeCatalogItem, setSelectedMesh, setMaterialOverrides, setVehicleCustomization]);
 
-  const isDirty = isOverridesDirty(materialOverrides, savedOverridesRef.current);
+  // ── Sync mesh names + material inventory + capabilities after model loads ───────
+  useEffect(() => {
+    if (!loading && viewerRef.current) {
+      const loadedMeshNames = viewerRef.current.getLoadedMeshNames();
+      setAvailableMeshNames(loadedMeshNames);
 
-  // ── Sync panel → viewer selection ────────────
+      const inventory = viewerRef.current.getMaterialInventory();
+      setMaterialInventory(inventory);
+
+      // ⭐ Core: read the GlbAnalyzer capability report and push to store
+      const caps = viewerRef.current.getCapabilities();
+      if (caps) {
+        setVehicleCapabilities(caps);
+        console.log(`[Build] Capabilities for ${activeCatalogItem.id}:`, caps);
+      }
+
+      // Re-apply legacy mesh overrides
+      Object.entries(materialOverrides).forEach(([meshName, config]) => {
+        viewerRef.current?.updateMaterial(meshName, config);
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, setAvailableMeshNames, setMaterialInventory, setVehicleCapabilities]);
+
+  // ── Sync panel → viewer selection ────────────────────────────────────────────
   useEffect(() => {
     if (viewerRef.current) {
       viewerRef.current.selectMesh(selectedMeshName);
     }
   }, [selectedMeshName]);
 
-  // ── Re-apply material overrides & sync available mesh names after viewer finishes loading ──
-  useEffect(() => {
-    if (!loading && viewerRef.current) {
-      const loadedMeshNames = viewerRef.current.getLoadedMeshNames();
-      setAvailableMeshNames(loadedMeshNames);
+  // ── Dirty state ──────────────────────────────────────────────────────────────
+  const isSemanticDirty = isCustomizationDirty(vehicleCustomization, savedCustomizationRef.current);
+  const isOverridesDirtyFlag = isOverridesDirty(materialOverrides, savedOverridesRef.current);
+  const isDirty = isSemanticDirty || isOverridesDirtyFlag;
 
-      Object.entries(materialOverrides).forEach(([meshName, config]) => {
-        viewerRef.current?.updateMaterial(meshName, config);
-      });
-    }
-  }, [loading, materialOverrides, setAvailableMeshNames]);
-
-  // ── Material update handler ──────────────────
+  // ── Legacy per-mesh material update handler (Part Inspector) ─────────────────
   const handleUpdateMaterial = useCallback(
     (meshName: string, config: { color?: string; roughness?: number; metalness?: number; opacity?: number; wireframe?: boolean }) => {
       viewerRef.current?.updateMaterial(meshName, config);
@@ -142,7 +187,7 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
     []
   );
 
-  // ── Save to Garage action ────────────────────
+  // ── Save to Garage ────────────────────────────────────────────────────────────
   const handleSaveToGarage = () => {
     const buildId = currentBuildId || buildIdParam || `custom-${activeCatalogItem.id}-${Date.now()}`;
     if (!currentBuildId) {
@@ -160,41 +205,38 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
         minute: "2-digit",
       }),
       materialOverrides: { ...materialOverrides },
+      vehicleCustomization: { ...vehicleCustomization },
     };
 
     saveVehicleBuild(newBuild);
     savedOverridesRef.current = { ...materialOverrides };
+    savedCustomizationRef.current = { ...vehicleCustomization };
+
     setNotification("Build saved to Garage!");
     setIsSaved(true);
 
-    // Revert button state after 2 seconds
-    setTimeout(() => {
-      setIsSaved(false);
-    }, 2000);
-
-    // Clear toast notification after 2.5s
-    setTimeout(() => {
-      setNotification(null);
-    }, 2500);
+    setTimeout(() => setIsSaved(false), 2000);
+    setTimeout(() => setNotification(null), 2500);
   };
 
-  // ── Discard action ───────────────────────────
+  // ── Reset / Discard ───────────────────────────────────────────────────────────
   const handleDiscard = () => {
-    const saved = savedOverridesRef.current;
-    setMaterialOverrides(saved);
+    // Restore saved semantic customization
+    setVehicleCustomization(savedCustomizationRef.current);
 
-    // Revert all parts on 3D viewer live
-    if (viewerRef.current) {
-      VEHICLE_PARTS_DATA.forEach((part) => {
-        const override = saved[part.meshName] ?? part.defaultMaterial;
-        viewerRef.current?.updateMaterial(part.meshName, override);
-      });
-    }
+    // Restore legacy mesh overrides
+    setMaterialOverrides(savedOverridesRef.current);
 
-    setNotification("Customizations discarded.");
-    setTimeout(() => {
-      setNotification(null);
-    }, 2500);
+    // Reset Three.js materials to original GLB state, then re-apply saved state
+    viewerRef.current?.resetCustomization();
+
+    // Re-apply any saved legacy per-mesh overrides on the viewer
+    Object.entries(savedOverridesRef.current).forEach(([meshName, config]) => {
+      viewerRef.current?.updateMaterial(meshName, config);
+    });
+
+    setNotification("Customizations reset.");
+    setTimeout(() => setNotification(null), 2500);
   };
 
   const handleSelectVehicleFromSheet = (newVehicleId: string) => {
@@ -202,10 +244,9 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
   };
 
   return (
-    /* Root: full screen height on desktop, min-h-dvh on mobile with overflow scroll */
     <div className="min-h-dvh lg:h-dvh w-full flex flex-col overflow-y-auto lg:overflow-hidden bg-[#f7f4ed] text-stone-900 font-sans">
 
-      {/* ── HEADER ───────────────────────────────── */}
+      {/* ── HEADER ──────────────────────────────────────────────── */}
       <header className="sticky top-0 z-30 h-[56px] min-h-[56px] shrink-0 flex items-center justify-between px-4 sm:px-5 border-b border-[#e8e2d5] bg-[#f7f4ed]">
         {/* Left: back button + vehicle name + active component pill */}
         <div className="flex items-center gap-3">
@@ -237,24 +278,22 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
           )}
         </div>
 
-        {/* Right: Top Navigation with Mobile Library Trigger */}
+        {/* Right: Top Navigation */}
         <Navbar onOpenLibrary={() => setIsLibraryOpen(true)} />
       </header>
 
-      {/* ── MAIN WORKSPACE LAYOUT ─────────────────── */}
-      {/* Desktop: flex-row filling 100dvh. Mobile/Tablet: flex-col with normal document scroll */}
+      {/* ── MAIN WORKSPACE ──────────────────────────────────────── */}
       <main className="flex-1 flex flex-col lg:flex-row overflow-visible lg:overflow-hidden min-h-0">
 
-        {/* 3D Viewport — 60vh height on mobile (peeking inspector below), flex-1 filling desktop space */}
+        {/* 3D Viewport */}
         <div className="w-full lg:flex-1 h-[60vh] min-h-[340px] max-h-[520px] lg:h-full lg:min-h-0 lg:max-h-none relative overflow-hidden bg-[#f2ebd9] touch-pan-y shrink-0 lg:shrink">
-          {/* WebGL canvas mount — absolutely fills the relative parent */}
           <div
             ref={mountRef}
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
           />
 
-          {/* Hover name chip — top-left */}
-          {(hoveredPart && !selectedPart) && (
+          {/* Hover name chip */}
+          {hoveredPart && !selectedPart && (
             <div className="absolute top-3 left-3 z-20 pointer-events-none animate-in fade-in slide-in-from-top-1 duration-150">
               <div className="flex items-center gap-2 bg-stone-900/85 backdrop-blur-sm text-white px-3 py-1.5 rounded-xl border border-stone-700/60 shadow-md text-xs font-semibold">
                 <span className="text-[#f5a623]">◈</span>
@@ -263,7 +302,7 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
             </div>
           )}
 
-          {/* Toast Notification Banner */}
+          {/* Toast Notification */}
           {notification && (
             <div className="absolute top-3 right-3 z-30 bg-stone-900 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2 border border-stone-700">
               <CheckCircle2 size={16} className="text-emerald-400" />
@@ -272,12 +311,13 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
           )}
         </div>
 
-        {/* DESKTOP INSPECTOR SIDEBAR (1024px and wider) */}
+        {/* DESKTOP INSPECTOR SIDEBAR */}
         <aside
           className="hidden lg:flex"
           style={{ width: "340px", minWidth: "340px", flexShrink: 0, flexDirection: "column", borderLeft: "1px solid #e8e2d5", background: "#f7f4ed", overflow: "hidden" }}
         >
           <PartInspectorPanel
+            capabilities={vehicleCapabilities}
             onUpdateMaterial={handleUpdateMaterial}
             onSave={handleSaveToGarage}
             onDiscard={handleDiscard}
@@ -286,9 +326,10 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
           />
         </aside>
 
-        {/* MOBILE / TABLET INSPECTOR SECTION (< 1024px) — Rendered in normal document flow below 3D vehicle */}
+        {/* MOBILE / TABLET INSPECTOR */}
         <div className="lg:hidden w-full border-t border-[#e8e2d5] bg-[#f7f4ed] flex flex-col">
           <PartInspectorPanel
+            capabilities={vehicleCapabilities}
             onUpdateMaterial={handleUpdateMaterial}
             onSave={handleSaveToGarage}
             onDiscard={handleDiscard}
@@ -298,7 +339,7 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
         </div>
       </main>
 
-      {/* ── MOBILE VEHICLE LIBRARY SHEET OVERLAY ─────────────────── */}
+      {/* ── MOBILE VEHICLE LIBRARY SHEET ──────────────────────── */}
       <VehicleLibrarySheet
         isOpen={isLibraryOpen}
         onClose={() => setIsLibraryOpen(false)}
@@ -306,7 +347,7 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
         onSelectVehicle={handleSelectVehicleFromSheet}
       />
 
-      {/* ── LOADING OVERLAY ──────────────────────── */}
+      {/* ── LOADING OVERLAY ─────────────────────────────────────── */}
       {loading && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#f7f4ed]/95 backdrop-blur-sm">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#e0564d]/10 text-[#e0564d] border border-[#e0564d]/20 mb-4">
@@ -330,9 +371,9 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
   );
 }
 
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // ROUTE SWITCHER
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 function VehicleViewerContent() {
   const searchParams = useSearchParams();
   const vehicleParam = searchParams.get("vehicle");
@@ -344,9 +385,9 @@ function VehicleViewerContent() {
   return <BuildWorkspaceContent vehicleParam={vehicleParam} />;
 }
 
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // EXPORT
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 export const VehicleViewerShell: React.FC = () => {
   return (
     <Suspense
@@ -363,4 +404,3 @@ export const VehicleViewerShell: React.FC = () => {
     </Suspense>
   );
 };
-

@@ -26,6 +26,20 @@ export interface VehiclePartData {
   accentColor?: string;
 }
 
+/** Lean PBR config used by the customization adapter — no Three.js objects */
+export interface PBRConfig {
+  color?: string;
+  roughness?: number;
+  metalness?: number;
+  clearcoat?: number;
+  clearcoatRoughness?: number;
+  opacity?: number;
+  transparent?: boolean;
+  wireframe?: boolean;
+  emissive?: string;
+  emissiveIntensity?: number;
+}
+
 export interface HotspotCallout {
   id: string;
   partId: string;

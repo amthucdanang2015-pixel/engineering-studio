@@ -1,11 +1,15 @@
 import type { PartMaterialConfig } from "../domain/vehicle";
+import type { VehicleCustomization } from "../domain/vehicleCustomization";
 
 export interface SavedVehicleBuild {
   id: string;
   baseVehicleId: string;
   name: string;
   savedAt: string;
+  /** Legacy per-mesh material overrides — kept for backward compatibility */
   materialOverrides: Record<string, Partial<PartMaterialConfig>>;
+  /** Semantic customization state — the primary save format going forward */
+  vehicleCustomization?: VehicleCustomization;
 }
 
 const STORAGE_KEY = "esf_saved_builds";
