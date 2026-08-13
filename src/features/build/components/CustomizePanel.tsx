@@ -80,7 +80,7 @@ function ColorSwatchGrid({
             type="button"
             title={p.name}
             onClick={() => onSelect(p.hex, p.metalness, p.roughness)}
-            className={`relative h-7 rounded-lg border-2 transition-all duration-100 hover:scale-110 ${active
+            className={`relative h-7 rounded-lg border-2 transition-all duration-100 hover:scale-110 hover:cursor-pointer ${active
               ? "border-[#e0564d] scale-110 ring-2 ring-[#e0564d]/30"
               : "border-stone-200 hover:border-stone-400"
               }`}
@@ -114,7 +114,7 @@ function OptionChips<T extends string>({
           key={o.value}
           type="button"
           onClick={() => onSelect(o.value)}
-          className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg border transition-all ${current === o.value
+          className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg border transition-all hover:cursor-pointer ${current === o.value
             ? "bg-[#e0564d] border-[#e0564d] text-white shadow-sm"
             : "bg-white border-stone-200 text-stone-600 hover:border-stone-400 hover:bg-stone-50"
             }`}

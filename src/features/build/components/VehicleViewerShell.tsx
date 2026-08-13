@@ -264,7 +264,7 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
           </div>
 
           {selectedPart && (
-            <div className="hidden sm:flex items-center gap-2 bg-white border border-[#e8e2d5] rounded-full px-3 py-1 shadow-2xs ml-2">
+            <div className="hidden sm:flex items-center gap-2 bg-white border border-[#e8e2d5] rounded-full px-3 py-1 shadow-2xs ml-2 hover:cursor-pointer hover:bg-[#dbd3d3]">
               <span className="h-2 w-2 rounded-full bg-[#e0564d]" />
               <span className="text-[11px] font-bold text-stone-800 truncate max-w-[160px]">{selectedPart.name}</span>
               <button
