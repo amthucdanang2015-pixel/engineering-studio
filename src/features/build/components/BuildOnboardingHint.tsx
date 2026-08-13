@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { MoveDownRight } from "lucide-react";
+import { ArrowDown, MoveDownRight } from "lucide-react";
 
 const STORAGE_KEY = "build-customization-onboarding-dismissed";
 
@@ -127,22 +127,7 @@ export const BuildOnboardingHint: React.FC<BuildOnboardingHintProps> = ({
           </div>
 
           {/* Downward chevron — attached directly below the card */}
-          <svg
-            aria-hidden="true"
-            width="16"
-            height="10"
-            viewBox="0 0 16 10"
-            fill="none"
-            className="mt-1.5 opacity-60"
-          >
-            <path
-              d="M1 1 L8 8 L15 1"
-              stroke="#e0564d"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <ArrowDown className="mt-2 text-[#e0564d]" />
         </div>
       </div>
     </>
