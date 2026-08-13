@@ -142,7 +142,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLibrary }) => {
           aria-label="Open Navigation Menu"
         >
           <Menu size={18} className="text-stone-700" />
-          <span className="text-xs font-black uppercase tracking-wider text-stone-900 font-mono">
+          <span className="hidden sm:inline text-xs font-black uppercase tracking-wider text-stone-900 font-mono">
             VEHICLE STUDIO
           </span>
         </button>

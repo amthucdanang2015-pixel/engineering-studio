@@ -62,6 +62,7 @@ export const PresetColorPalette: React.FC<PresetColorPaletteProps> = ({
         <input
           type="text"
           value={currentColor.toUpperCase()}
+          readOnly
           className="flex-1 h-7 px-2 text-[11px] font-mono border border-stone-200 rounded-lg bg-stone-50 focus:outline-none focus:border-[#e0564d]"
           maxLength={7}
         />

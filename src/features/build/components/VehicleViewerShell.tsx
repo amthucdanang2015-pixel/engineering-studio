@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState, Suspense } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -27,7 +27,13 @@ import type { PartMaterialConfig } from "@/core/domain/vehicle";
 import type { VehicleCustomization } from "@/core/domain/vehicleCustomization";
 
 import { VehicleLibrarySheet } from "./VehicleLibrarySheet";
-import { BuildOnboardingHint } from "./BuildOnboardingHint";
+import { BuildDotsOverlay } from "./BuildDotsOverlay";
+import { BuildTipCard } from "./BuildTipCard";
+
+// These are implementation meshes from the current car asset. They are not
+// independently activatable through the existing component-selection UI, so
+// they must never be exposed as point targets.
+const NON_ACTIVATABLE_POINT_ID = /^(Exterior_Trim_\d+|Body_AeroPanel_\d+)$/;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BUILD WORKSPACE CONTENT
@@ -62,6 +68,7 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
     selectedMeshName,
     selectedPart,
     hoveredMeshName,
+    availableMeshNames,
     materialOverrides,
     vehicleCustomization,
     vehicleCapabilities,
@@ -74,6 +81,21 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
   } = useVehicleStore();
 
   const hoveredPart = getPartByMeshName(hoveredMeshName);
+
+  // The analyzer's capability report is the existing customization registry.
+  // Resolve one actual component-list ID per customizable material capability;
+  // never derive points by enumerating every loaded GLB mesh.
+  const customizationPointIds = useMemo(() => {
+    const selectableIds = new Set(availableMeshNames);
+    const resolvedIds = vehicleCapabilities.allMaterials
+      .filter((material) => material.isCustomizable)
+      .map((material) => material.meshNames.find(
+        (meshName) => selectableIds.has(meshName) && !NON_ACTIVATABLE_POINT_ID.test(meshName)
+      ))
+      .filter((meshName): meshName is string => meshName !== undefined);
+
+    return [...new Set(resolvedIds)];
+  }, [availableMeshNames, vehicleCapabilities]);
 
   /** Saved baseline refs — used for dirty checking and discard */
   const savedOverridesRef = useRef<Record<string, Partial<PartMaterialConfig>>>({});
@@ -292,10 +314,18 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
           />
 
-          {/* First-time onboarding hint — appears after load, gone after first selection */}
-          <BuildOnboardingHint
+          {/* 3D capability dots — follow the vehicle as it rotates/zooms */}
+          <BuildDotsOverlay
+            viewerRef={viewerRef}
+            componentIds={customizationPointIds}
+            selectedComponentId={selectedMeshName}
+            onSelectComponent={setSelectedMesh}
             modelLoaded={!loading}
-            partSelected={!!selectedPart}
+          />
+
+          {/* Tip card — upper-right, persists throughout the session */}
+          <BuildTipCard
+            modelLoaded={!loading}
           />
 
           {/* Hover name chip */}

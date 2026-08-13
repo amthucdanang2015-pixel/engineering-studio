@@ -63,6 +63,14 @@ export class AnatomyViewer {
   private calloutEl: HTMLElement | null = null;
   private disposed = false;
 
+  /**
+   * VehicleRoot-local bounding box computed once on model load (rotation=0, scale=1).
+   * Stable across vehicle yaw rotations — anchors are expressed as fractions of this box
+   * then transformed to world space each frame via vehicleRoot.matrixWorld.
+   */
+  private vehicleLocalBox: { min: { x: number; y: number; z: number }; max: { x: number; y: number; z: number } } | null = null;
+  private meshAnchorCache = new Map<string, THREE.Vector3>();
+
   // Emissive + opacity backup map per specific Mesh
   private originalEmissives = new Map<THREE.Mesh, { emissive: THREE.Color; intensity: number; opacity: number; transparent: boolean }>();
 
@@ -186,6 +194,7 @@ export class AnatomyViewer {
     if (request !== this.loadRequest || this.disposed) return;
 
     this.currentAsset = asset;
+    this.meshAnchorCache.clear();
     asset.pivot.scale.setScalar(1);
     asset.pivot.position.set(0, 0, 0);
 
@@ -203,8 +212,37 @@ export class AnatomyViewer {
     const box = new THREE.Box3().setFromObject(this.vehicleRoot);
     this.cameraController.frameObject(box, this.camera.aspect, "side", 0.85);
 
+    // Cache the local-space bounding box for the dot overlay (rotation=0 at this point)
+    this.computeVehicleLocalBox();
+
     this.busy(2.5);
     this.callbacks.onLoading?.(false, 1);
+  }
+
+  /**
+   * Computes and caches the vehicle bounding box in VehicleRoot-LOCAL space.
+   * Called once when a model finishes loading (vehicleRoot.rotation is still 0).
+   * Iterates geometry bounding boxes and transforms them through each mesh's
+   * matrixWorld → then back through vehicleRoot.matrixWorld.inverse, yielding
+   * stable local coordinates that never change as the vehicle rotates.
+   */
+  private computeVehicleLocalBox(): void {
+    if (!this.currentAsset) { this.vehicleLocalBox = null; return; }
+    const localBox = new THREE.Box3();
+    const rootInverse = new THREE.Matrix4().copy(this.vehicleRoot.matrixWorld).invert();
+    this.currentAsset.meshes.forEach((mesh) => {
+      if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
+      const geoBB = mesh.geometry.boundingBox;
+      if (!geoBB) return;
+      // mesh local → world → vehicleRoot local
+      const bb = geoBB.clone().applyMatrix4(mesh.matrixWorld).applyMatrix4(rootInverse);
+      localBox.union(bb);
+    });
+    if (localBox.isEmpty()) { this.vehicleLocalBox = null; return; }
+    this.vehicleLocalBox = {
+      min: { x: localBox.min.x, y: localBox.min.y, z: localBox.min.z },
+      max: { x: localBox.max.x, y: localBox.max.y, z: localBox.max.z },
+    };
   }
 
   // ---------------------------------------------------------------- render loop
@@ -617,6 +655,85 @@ export class AnatomyViewer {
   updateMaterial(meshName: string, config: { color?: string; roughness?: number; metalness?: number; opacity?: number; wireframe?: boolean }) {
     this.assets.updateMaterial(meshName, config);
     this.dirty = true;
+  }
+
+  // ── 3D Dot Overlay API ────────────────────────────────────────────────────
+
+  /**
+   * Returns the vehicle bounding box in VehicleRoot-LOCAL space (rotation=0, scale=1).
+   * This is stable across vehicle yaw and zoom — use it to define anchor fractions.
+   * Then call projectVehicleLocalToScreen() each frame to get the correct screen position.
+   */
+  getVehicleLocalBoundingBox(): { min: { x: number; y: number; z: number }; max: { x: number; y: number; z: number } } | null {
+    return this.vehicleLocalBox;
+  }
+
+  /**
+   * Transforms a point from VehicleRoot-LOCAL space → world space (applying live
+   * rotation and scale) → camera projection → viewport-percentage coordinates.
+   *
+   * This is the correct method for dot anchors that must follow vehicle rotation/zoom.
+   * Call every animation frame; it is cheap (one matrix multiply + project).
+   */
+  projectVehicleLocalToScreen(lx: number, ly: number, lz: number): { x: number; y: number; behindCamera: boolean } {
+    // Ensure vehicleRoot's matrix chain is current (traverses 3 levels — very cheap)
+    this.vehicleRoot.updateWorldMatrix(true, false);
+    const worldPos = new THREE.Vector3(lx, ly, lz).applyMatrix4(this.vehicleRoot.matrixWorld);
+    worldPos.project(this.camera);
+    return {
+      x: (worldPos.x * 0.5 + 0.5) * 100,
+      y: (-worldPos.y * 0.5 + 0.5) * 100,
+      behindCamera: worldPos.z > 1,
+    };
+  }
+
+  /**
+   * Returns a VehicleRoot-local anchor for one existing selectable mesh. It is
+   * deliberately keyed by the GLB mesh ID used by the component list, not by a
+   * generated semantic category.
+   */
+  getMeshAnchor(meshName: string): { x: number; y: number; z: number } | null {
+    const cached = this.meshAnchorCache.get(meshName);
+    if (cached) return { x: cached.x, y: cached.y, z: cached.z };
+
+    const mesh = this.currentAsset?.meshMap.get(meshName);
+    if (!mesh) return null;
+    this.vehicleRoot.updateWorldMatrix(true, false);
+    const rootInverse = new THREE.Matrix4().copy(this.vehicleRoot.matrixWorld).invert();
+    // Use the target object's own transform origin rather than its geometry
+    // bounds. Vehicle meshes can have offset/baked geometry, whereas the GLB
+    // node transform is the stable physical anchor for the selected component.
+    const anchor = mesh.getWorldPosition(new THREE.Vector3()).applyMatrix4(rootInverse);
+    this.meshAnchorCache.set(meshName, anchor.clone());
+    return { x: anchor.x, y: anchor.y, z: anchor.z };
+  }
+
+  /**
+   * @deprecated Use getVehicleLocalBoundingBox() + projectVehicleLocalToScreen() instead.
+   * Returns world-space AABB — unreliable for anchor fractions after vehicle rotation.
+   */
+  getVehicleBoundingBox(): { min: { x: number; y: number; z: number }; max: { x: number; y: number; z: number } } | null {
+    if (!this.currentAsset) return null;
+    this.scene.updateMatrixWorld(false);
+    const box = new THREE.Box3().setFromObject(this.vehicleRoot);
+    if (box.isEmpty()) return null;
+    return {
+      min: { x: box.min.x, y: box.min.y, z: box.min.z },
+      max: { x: box.max.x, y: box.max.y, z: box.max.z },
+    };
+  }
+
+  /**
+   * @deprecated Use projectVehicleLocalToScreen() for anchors that follow the vehicle.
+   * Projects a raw world-space point (not connected to vehicle hierarchy).
+   */
+  projectWorldToScreen(wx: number, wy: number, wz: number): { x: number; y: number; behindCamera: boolean } {
+    const worldPos = new THREE.Vector3(wx, wy, wz);
+    worldPos.project(this.camera);
+    const behindCamera = worldPos.z > 1;
+    const x = (worldPos.x * 0.5 + 0.5) * 100;
+    const y = (-worldPos.y * 0.5 + 0.5) * 100;
+    return { x, y, behindCamera };
   }
 
   dispose() {

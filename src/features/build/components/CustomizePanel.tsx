@@ -359,7 +359,7 @@ export const CustomizePanel: React.FC<CustomizePanelProps> = ({
 
           {/* ── PRIMARY PAINT ────────────────────────────────────────────── */}
           {capabilities.paint.supported && (
-            <div className="bg-white rounded-2xl border border-[#e8e2d5] p-4 shadow-sm space-y-3.5">
+            <div id="capability-paint" className="bg-white rounded-2xl border border-[#e8e2d5] p-4 shadow-sm space-y-3.5">
               <SectionHeader icon={<Paintbrush size={13} />} label="Primary Paint" />
 
               <ColorSwatchGrid
@@ -404,7 +404,7 @@ export const CustomizePanel: React.FC<CustomizePanelProps> = ({
 
           {/* ── ACCENT PAINT ─────────────────────────────────────────────── */}
           {capabilities.accentPaint.supported && (
-            <div className="bg-white rounded-2xl border border-[#e8e2d5] p-4 shadow-sm space-y-3">
+            <div id="capability-accentPaint" className="bg-white rounded-2xl border border-[#e8e2d5] p-4 shadow-sm space-y-3">
               <SectionHeader icon={<CircleDot size={13} />} label="Accent Colour" />
               <ColorSwatchGrid
                 presets={PAINT_PRESETS}
@@ -421,7 +421,7 @@ export const CustomizePanel: React.FC<CustomizePanelProps> = ({
 
           {/* ── WHEEL RIMS ───────────────────────────────────────────────── */}
           {capabilities.rims.supported && (
-            <div className="bg-white rounded-2xl border border-[#e8e2d5] p-4 shadow-sm space-y-3">
+            <div id="capability-rims" className="bg-white rounded-2xl border border-[#e8e2d5] p-4 shadow-sm space-y-3">
               <SectionHeader icon={<Disc3 size={13} />} label="Wheel Finish" />
               <ColorSwatchGrid
                 presets={RIM_PRESETS}
@@ -438,7 +438,7 @@ export const CustomizePanel: React.FC<CustomizePanelProps> = ({
 
           {/* ── GLASS TINT ───────────────────────────────────────────────── */}
           {capabilities.glass.supported && (
-            <div className="bg-white rounded-2xl border border-[#e8e2d5] p-4 shadow-sm space-y-3">
+            <div id="capability-glass" className="bg-white rounded-2xl border border-[#e8e2d5] p-4 shadow-sm space-y-3">
               <SectionHeader icon={<Glasses size={13} />} label="Window Tint" />
               <OptionChips<GlassTint>
                 options={[
@@ -460,7 +460,7 @@ export const CustomizePanel: React.FC<CustomizePanelProps> = ({
 
           {/* ── TRIM FINISH ──────────────────────────────────────────────── */}
           {capabilities.trim.supported && (
-            <div className="bg-white rounded-2xl border border-[#e8e2d5] p-4 shadow-sm space-y-3">
+            <div id="capability-trim" className="bg-white rounded-2xl border border-[#e8e2d5] p-4 shadow-sm space-y-3">
               <SectionHeader icon={<CircleDot size={13} />} label="Exterior Trim" />
               <OptionChips<TrimFinish>
                 options={[
@@ -482,7 +482,7 @@ export const CustomizePanel: React.FC<CustomizePanelProps> = ({
 
           {/* ── LIGHTS ───────────────────────────────────────────────────── */}
           {capabilities.lights.supported && (
-            <div className="bg-white rounded-2xl border border-[#e8e2d5] p-4 shadow-sm space-y-3">
+            <div id="capability-lights" className="bg-white rounded-2xl border border-[#e8e2d5] p-4 shadow-sm space-y-3">
               <SectionHeader icon={<Lightbulb size={13} />} label="Lighting" />
               <OptionChips<HeadlightStyle>
                 options={[
