@@ -25,27 +25,27 @@ import type { VehicleCapabilities } from "@/core/domain/vehicleCapabilities";
 // PAINT PRESETS — automotive grade colour palette
 // ─────────────────────────────────────────────────────────────────────────────
 const PAINT_PRESETS = [
-  { name: "Obsidian Black",       hex: "#0d0d0f",  metalness: 0.3,  roughness: 0.15 },
-  { name: "Arctic White",         hex: "#f2f1ee",  metalness: 0.1,  roughness: 0.2  },
-  { name: "Glacier Silver",       hex: "#8fa0b0",  metalness: 0.72, roughness: 0.18 },
-  { name: "Racing Red",           hex: "#c01308",  metalness: 0.2,  roughness: 0.22 },
-  { name: "Cobalt Blue",          hex: "#18388a",  metalness: 0.25, roughness: 0.2  },
-  { name: "British Racing Green", hex: "#183d24",  metalness: 0.2,  roughness: 0.22 },
-  { name: "Signal Yellow",        hex: "#e6b800",  metalness: 0.1,  roughness: 0.25 },
-  { name: "Burnt Orange",         hex: "#c45200",  metalness: 0.15, roughness: 0.22 },
-  { name: "Midnight Purple",      hex: "#26185a",  metalness: 0.3,  roughness: 0.18 },
-  { name: "Rose Gold",            hex: "#b07070",  metalness: 0.62, roughness: 0.2  },
-  { name: "Gunmetal",             hex: "#363b40",  metalness: 0.52, roughness: 0.25 },
-  { name: "Pearl Ivory",          hex: "#e5ddc4",  metalness: 0.15, roughness: 0.2  },
+  { name: "Obsidian Black", hex: "#0d0d0f", metalness: 0.3, roughness: 0.15 },
+  { name: "Arctic White", hex: "#f2f1ee", metalness: 0.1, roughness: 0.2 },
+  { name: "Glacier Silver", hex: "#8fa0b0", metalness: 0.72, roughness: 0.18 },
+  { name: "Racing Red", hex: "#c01308", metalness: 0.2, roughness: 0.22 },
+  { name: "Cobalt Blue", hex: "#18388a", metalness: 0.25, roughness: 0.2 },
+  { name: "British Racing Green", hex: "#183d24", metalness: 0.2, roughness: 0.22 },
+  { name: "Signal Yellow", hex: "#e6b800", metalness: 0.1, roughness: 0.25 },
+  { name: "Burnt Orange", hex: "#c45200", metalness: 0.15, roughness: 0.22 },
+  { name: "Midnight Purple", hex: "#26185a", metalness: 0.3, roughness: 0.18 },
+  { name: "Rose Gold", hex: "#b07070", metalness: 0.62, roughness: 0.2 },
+  { name: "Gunmetal", hex: "#363b40", metalness: 0.52, roughness: 0.25 },
+  { name: "Pearl Ivory", hex: "#e5ddc4", metalness: 0.15, roughness: 0.2 },
 ];
 
 const RIM_PRESETS = [
   { name: "Machined Silver", hex: "#8894a0", metalness: 0.85, roughness: 0.18 },
-  { name: "Gloss Black",     hex: "#0a0a0a", metalness: 0.4,  roughness: 0.12 },
-  { name: "Gunmetal",        hex: "#363b40", metalness: 0.7,  roughness: 0.22 },
-  { name: "Chrome",          hex: "#c5cdd4", metalness: 0.95, roughness: 0.06 },
-  { name: "Bronze",          hex: "#88672c", metalness: 0.75, roughness: 0.2  },
-  { name: "Gold",            hex: "#c09c20", metalness: 0.8,  roughness: 0.15 },
+  { name: "Gloss Black", hex: "#0a0a0a", metalness: 0.4, roughness: 0.12 },
+  { name: "Gunmetal", hex: "#363b40", metalness: 0.7, roughness: 0.22 },
+  { name: "Chrome", hex: "#c5cdd4", metalness: 0.95, roughness: 0.06 },
+  { name: "Bronze", hex: "#88672c", metalness: 0.75, roughness: 0.2 },
+  { name: "Gold", hex: "#c09c20", metalness: 0.8, roughness: 0.15 },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -80,18 +80,16 @@ function ColorSwatchGrid({
             type="button"
             title={p.name}
             onClick={() => onSelect(p.hex, p.metalness, p.roughness)}
-            className={`relative h-7 rounded-lg border-2 transition-all duration-100 hover:scale-110 ${
-              active
-                ? "border-[#e0564d] scale-110 ring-2 ring-[#e0564d]/30"
-                : "border-stone-200 hover:border-stone-400"
-            }`}
+            className={`relative h-7 rounded-lg border-2 transition-all duration-100 hover:scale-110 ${active
+              ? "border-[#e0564d] scale-110 ring-2 ring-[#e0564d]/30"
+              : "border-stone-200 hover:border-stone-400"
+              }`}
             style={{ backgroundColor: p.hex }}
           >
             {active && (
-              <span className={`absolute inset-0 flex items-center justify-center text-[10px] font-bold ${
-                p.hex === "#f2f1ee" || p.hex === "#e5ddc4" || p.hex === "#e6b800"
-                  ? "text-stone-800" : "text-white"
-              }`}>✓</span>
+              <span className={`absolute inset-0 flex items-center justify-center text-[10px] font-bold ${p.hex === "#f2f1ee" || p.hex === "#e5ddc4" || p.hex === "#e6b800"
+                ? "text-stone-800" : "text-white"
+                }`}>✓</span>
             )}
           </button>
         );
@@ -116,11 +114,10 @@ function OptionChips<T extends string>({
           key={o.value}
           type="button"
           onClick={() => onSelect(o.value)}
-          className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg border transition-all ${
-            current === o.value
-              ? "bg-[#e0564d] border-[#e0564d] text-white shadow-sm"
-              : "bg-white border-stone-200 text-stone-600 hover:border-stone-400 hover:bg-stone-50"
-          }`}
+          className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg border transition-all ${current === o.value
+            ? "bg-[#e0564d] border-[#e0564d] text-white shadow-sm"
+            : "bg-white border-stone-200 text-stone-600 hover:border-stone-400 hover:bg-stone-50"
+            }`}
         >
           {o.label}
         </button>
@@ -227,8 +224,8 @@ function ActionFooter({
           isSaved
             ? "flex-1 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 active:scale-[0.98] cursor-pointer"
             : isDirty
-            ? "flex-1 py-2.5 px-3 rounded-xl bg-[#e0564d] hover:bg-[#c9463e] text-white font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 active:scale-[0.98] cursor-pointer"
-            : "flex-1 py-2.5 px-3 rounded-xl bg-stone-300 text-stone-500 font-bold text-xs flex items-center justify-center gap-1.5 opacity-60 cursor-not-allowed"
+              ? "flex-1 py-2.5 px-3 rounded-xl bg-[#e0564d] hover:bg-[#c9463e] text-white font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 active:scale-[0.98] cursor-pointer"
+              : "flex-1 py-2.5 px-3 rounded-xl bg-stone-300 text-stone-500 font-bold text-xs flex items-center justify-center gap-1.5 opacity-60 cursor-not-allowed"
         }
       >
         {isSaved ? <CheckCircle2 size={13} /> : <Save size={13} />}
@@ -243,12 +240,12 @@ function ActionFooter({
 // ─────────────────────────────────────────────────────────────────────────────
 function CapabilityBadges({ caps }: { caps: VehicleCapabilities }) {
   const badges = [
-    { label: "Paint",      active: caps.paint.supported },
-    { label: "Accent",     active: caps.accentPaint.supported },
-    { label: "Glass",      active: caps.glass.supported },
-    { label: "Rims",       active: caps.rims.supported },
-    { label: "Trim",       active: caps.trim.supported },
-    { label: "Lights",     active: caps.lights.supported },
+    { label: "Paint", active: caps.paint.supported },
+    { label: "Accent", active: caps.accentPaint.supported },
+    { label: "Glass", active: caps.glass.supported },
+    { label: "Rims", active: caps.rims.supported },
+    { label: "Trim", active: caps.trim.supported },
+    { label: "Lights", active: caps.lights.supported },
   ].filter(b => b.active);
 
   if (badges.length === 0) return null;
@@ -393,7 +390,7 @@ export const CustomizePanel: React.FC<CustomizePanelProps> = ({
               <div className="space-y-2.5 pt-1 border-t border-[#f2ebd9]">
                 <SliderRow label="Metalness" value={paint.metalness ?? 0.15} onChange={handleMetalness} />
                 <SliderRow label="Roughness" value={paint.roughness ?? 0.28} onChange={handleRoughness} />
-                <SliderRow label="Clearcoat" value={paint.clearcoat ?? 0.8}  onChange={handleClearcoat} />
+                <SliderRow label="Clearcoat" value={paint.clearcoat ?? 0.8} onChange={handleClearcoat} />
               </div>
 
               {/* Debug: which material names are being targeted */}
@@ -445,10 +442,10 @@ export const CustomizePanel: React.FC<CustomizePanelProps> = ({
               <SectionHeader icon={<Glasses size={13} />} label="Window Tint" />
               <OptionChips<GlassTint>
                 options={[
-                  { value: "none",   label: "Clear"  },
-                  { value: "light",  label: "Light"  },
+                  { value: "none", label: "Clear" },
+                  { value: "light", label: "Light" },
                   { value: "medium", label: "Medium" },
-                  { value: "dark",   label: "Dark"   },
+                  { value: "dark", label: "Dark" },
                 ]}
                 current={vehicleCustomization.glass?.tint}
                 onSelect={handleGlassTint}
@@ -467,10 +464,10 @@ export const CustomizePanel: React.FC<CustomizePanelProps> = ({
               <SectionHeader icon={<CircleDot size={13} />} label="Exterior Trim" />
               <OptionChips<TrimFinish>
                 options={[
-                  { value: "chrome",      label: "Chrome"      },
+                  { value: "chrome", label: "Chrome" },
                   { value: "gloss-black", label: "Gloss Black" },
                   { value: "matte-black", label: "Matte Black" },
-                  { value: "body-color",  label: "Body Colour" },
+                  { value: "body-color", label: "Body Colour" },
                 ]}
                 current={vehicleCustomization.trim?.finish}
                 onSelect={handleTrimFinish}
@@ -489,7 +486,7 @@ export const CustomizePanel: React.FC<CustomizePanelProps> = ({
               <SectionHeader icon={<Lightbulb size={13} />} label="Lighting" />
               <OptionChips<HeadlightStyle>
                 options={[
-                  { value: "standard",   label: "Standard"   },
+                  { value: "standard", label: "Standard" },
                   { value: "cool-white", label: "Cool White" },
                   { value: "warm-white", label: "Warm White" },
                 ]}

@@ -36,23 +36,29 @@ export const PresetColorPalette: React.FC<PresetColorPaletteProps> = ({
               type="button"
               onClick={() => onSelectColor(preset.hex)}
               title={preset.name}
-              className={`group relative h-7 rounded-lg border transition-all duration-150 ${
-                isActive
-                  ? "border-[#f95738] scale-105 ring-2 ring-[#f95738]/30"
-                  : "border-slate-200 hover:border-slate-400 hover:scale-105"
-              }`}
+              className={`group relative h-7 rounded-lg border transition-all duration-150 ${isActive
+                ? "border-[#f95738] scale-105 ring-2 ring-[#f95738]/30"
+                : "border-slate-200 hover:border-slate-400 hover:scale-105"
+                }`}
               style={{ backgroundColor: preset.hex }}
             >
               {isActive && (
-                <span className={`absolute inset-0 flex items-center justify-center text-[10px] font-bold ${
-                  preset.hex === "#ffffff" ? "text-slate-900" : "text-white"
-                }`}>
+                <span className={`absolute inset-0 flex items-center justify-center text-[10px] font-bold ${preset.hex === "#ffffff" ? "text-slate-900" : "text-white"
+                  }`}>
                   ✓
                 </span>
               )}
             </button>
           );
         })}
+        <label className="text-[12px] mt-1 text-[#000] mr-20">Custom</label>
+        <input
+          type="color"
+          value={currentColor}
+          onChange={(e) => onSelectColor(e.target.value)}
+          className={`group relative h-7 rounded-lg transition-all duration-150`}
+          title="Pick a custom paint colour"
+        />
       </div>
     </div>
   );
