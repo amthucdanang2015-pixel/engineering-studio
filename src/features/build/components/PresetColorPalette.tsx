@@ -51,7 +51,7 @@ export const PresetColorPalette: React.FC<PresetColorPaletteProps> = ({
             </button>
           );
         })}
-        <label className="text-[12px] mt-1 text-[#000] mr-20">Custom</label>
+        <label className="text-[12px] mt-1 text-[#000]">Custom</label>
         <input
           type="color"
           value={currentColor}

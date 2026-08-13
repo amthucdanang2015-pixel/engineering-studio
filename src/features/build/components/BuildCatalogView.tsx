@@ -40,13 +40,11 @@ export const BuildCatalogView: React.FC = () => {
       <header className="esf-panel w-full flex items-center justify-between rounded-2xl px-5 py-3.5 shadow-sm bg-white/90 backdrop-blur-md border border-slate-200 mb-4 lg:mb-5 shrink-0">
         <div className="hidden md:flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f95738]/10 text-[#f95738] border border-[#f95738]/20">
-            <Wrench size={20} />
+            <img src="/images/favicon.ico" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-extrabold uppercase tracking-widest text-slate-400">ESF V2</span>
-              <span className="text-slate-300">/</span>
-              <h1 className="text-sm font-extrabold tracking-tight text-slate-900 uppercase">GARAGE</h1>
+              <h1 className="text-sm font-extrabold tracking-tight text-slate-900 uppercase">Vehicle Studio</h1>
             </div>
             <p className="text-[11px] text-slate-500 font-medium hidden sm:block">
               View and manage your saved custom vehicle builds.
@@ -62,7 +60,7 @@ export const BuildCatalogView: React.FC = () => {
       <div className="flex-1 flex flex-col lg:flex-row min-h-0 lg:h-[calc(100dvh-56px)] overflow-visible lg:overflow-hidden">
 
         {/* ── LEFT SIDEBAR: BASE VEHICLE LIBRARY (Desktop only: hidden lg:flex) ── */}
-        <aside className="hidden lg:flex w-full lg:w-72 xl:w-80 shrink-0 flex-col border-b lg:border-b-0 lg:border-r border-[#e8e2d5] bg-[#f7f4ed] h-full min-h-0 overflow-hidden">
+        <aside className="hidden lg:flex w-full lg:w-72 xl:w-80 shrink-0 flex-col border-b lg:border-b-0 lg:border-r  border border-[#e8e2d5] rounded-2xl h-full min-h-0 overflow-hidden">
           {/* Library Panel Header */}
           <div className="p-4 sm:px-5 py-3.5 border-b border-[#e8e2d5] flex items-center justify-between bg-[#f7f4ed] shrink-0">
             <div>

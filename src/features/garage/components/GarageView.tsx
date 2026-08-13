@@ -88,13 +88,11 @@ export const GarageView: React.FC = () => {
       <header className="esf-panel w-full flex items-center justify-between rounded-2xl px-5 py-3.5 shadow-sm bg-white/90 backdrop-blur-md border border-slate-200 mb-4 lg:mb-5 shrink-0">
         <div className="hidden md:flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f95738]/10 text-[#f95738] border border-[#f95738]/20">
-            <Wrench size={20} />
+            <img src="/images/favicon.ico" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-extrabold uppercase tracking-widest text-slate-400">ESF V2</span>
-              <span className="text-slate-300">/</span>
-              <h1 className="text-sm font-extrabold tracking-tight text-slate-900 uppercase">GARAGE</h1>
+              <h1 className="text-sm font-extrabold tracking-tight text-slate-900 uppercase">Vehicle Studio</h1>
             </div>
             <p className="text-[11px] text-slate-500 font-medium hidden sm:block">
               View and manage your saved custom vehicle builds.
@@ -211,7 +209,7 @@ export const GarageView: React.FC = () => {
                   <span>Open Build Workspace</span>
                   <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
                 </button>
-                
+
                 <button
                   type="button"
                   onClick={() => handleTestSavedBuild(selectedBuild)}
@@ -259,11 +257,10 @@ export const GarageView: React.FC = () => {
                   <div
                     key={build.id}
                     onClick={() => handleSelectBuild(build.id)}
-                    className={`cursor-pointer text-left p-4 rounded-2xl transition-all border bg-white flex flex-col justify-between group ${
-                      isSelected
-                        ? "border-[#f95738] shadow-md ring-2 ring-[#f95738]/20"
-                        : "border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-md"
-                    }`}
+                    className={`cursor-pointer text-left p-4 rounded-2xl transition-all border bg-white flex flex-col justify-between group ${isSelected
+                      ? "border-[#f95738] shadow-md ring-2 ring-[#f95738]/20"
+                      : "border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-md"
+                      }`}
                   >
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-1.5">
