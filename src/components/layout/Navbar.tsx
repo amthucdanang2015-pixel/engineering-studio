@@ -143,7 +143,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLibrary }) => {
         >
           <Menu size={18} className="text-stone-700" />
           <span className="text-xs font-black uppercase tracking-wider text-stone-900 font-mono">
-            ESF
+            VEHICLE STUDIO
           </span>
         </button>
       </div>
@@ -179,16 +179,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLibrary }) => {
             <div>
               <div className="flex items-center justify-between p-4 border-b border-[#e8e2d5]">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#e0564d]/10 text-[#e0564d] border border-[#e0564d]/20 font-black text-xs">
-                    ESF
-                  </div>
+                  <img src="/images/favicon.ico" alt="" className="h-6 w-6" />
                   <div>
                     <h2 className="text-xs font-black uppercase tracking-wider text-stone-900">
-                      ESF Engineering
+                      VEHICLE STUDIO
                     </h2>
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-stone-400">
-                      V2 Studio
-                    </span>
                   </div>
                 </div>
 
@@ -247,7 +242,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLibrary }) => {
 
             {/* Drawer Footer */}
             <div className="p-4 border-t border-[#e8e2d5] bg-stone-100/50 text-[10px] text-stone-400 font-mono text-center">
-              ESF V2 engineering simulator
+              Vehicle Studio engineering simulator
             </div>
           </aside>
         </div>,
