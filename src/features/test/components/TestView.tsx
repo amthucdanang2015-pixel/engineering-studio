@@ -20,24 +20,7 @@ export const TestView: React.FC = () => {
   return (
     <div className="relative min-h-screen w-full bg-[#f4f6f9] text-slate-900 font-sans flex flex-col justify-between p-4 md:p-6 overflow-y-auto">
       {/* Top Header Navigation */}
-      <header className="esf-panel w-full flex items-center justify-between rounded-2xl px-5 py-3.5 shadow-sm bg-white/90 backdrop-blur-md border border-slate-200 mb-6 shrink-0">
-        <div className="hidden md:flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f95738]/10 text-[#f95738] border border-[#f95738]/20">
-            <img src="/images/favicon.ico" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-sm font-extrabold tracking-tight text-slate-900 uppercase">Vehicle Studio</h1>
-            </div>
-            <p className="text-[11px] text-slate-500 font-medium hidden sm:block">
-              {activeBuild ? `Simulating performance telemetry for ${activeBuild.name}` : "Vehicle performance testing and aerodynamic simulation area."}
-            </p>
-          </div>
-        </div>
-
-        {/* Top Navigation */}
-        <Navbar />
-      </header>
+      <Navbar />
 
       {/* Main Workspace Content */}
       <div className="flex-1 flex flex-col items-center justify-center my-4">

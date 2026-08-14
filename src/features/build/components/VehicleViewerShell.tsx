@@ -301,41 +301,14 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
 
   return (
     <div className="relative min-h-screen lg:h-[100dvh] lg:max-h-[100dvh] w-full bg-[#f4f6f9] text-slate-900 font-sans flex flex-col justify-between p-4 md:p-5 overflow-y-auto lg:overflow-hidden">
-      {/* ── HEADER ──────────────────────────────────────────────── */}
-      <header className="esf-panel w-full flex items-center justify-between rounded-2xl px-5 py-3.5 shadow-sm bg-white/90 backdrop-blur-md border border-slate-200 mb-4 lg:mb-5 shrink-0">
-        {/* Left: back button + vehicle name + active component pill */}
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => router.push("/build")}
-            className="h-8 w-8 rounded-full bg-white border border-[#e8e2d5] flex items-center justify-center text-stone-500 hover:text-[#e0564d] hover:border-[#e0564d] hover:cursor-pointer transition-colors shadow-2xs"
-            title="Return to Vehicle Selection"
-          >
-            <ArrowLeft size={15} />
-          </button>
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Build Workspace</span>
-            <h1 className="text-xs sm:text-sm font-extrabold text-stone-900 leading-tight">{activeCatalogItem.name}</h1>
-          </div>
-
-          {selectedPart && (
-            <div className="hidden sm:flex items-center gap-2 bg-white border border-[#e8e2d5] rounded-full px-3 py-1 shadow-2xs ml-2 hover:cursor-pointer hover:bg-[#dbd3d3]">
-              <span className="h-2 w-2 rounded-full bg-[#e0564d]" />
-              <span className="text-[11px] font-bold text-stone-800 truncate max-w-[160px]">{selectedPart.name}</span>
-              <button
-                type="button"
-                onClick={() => setSelectedMesh(null)}
-                className="text-stone-400 hover:text-stone-700 transition-colors ml-1"
-              >
-                <X size={12} />
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Right: Top Navigation */}
-        <Navbar onOpenLibrary={() => setIsLibraryOpen(true)} />
-      </header>
+      {/* ── TOP HEADER NAVBAR ───────────────────────────────────── */}
+      <Navbar
+        backHref="/build"
+        vehicleName={activeCatalogItem.name}
+        selectedPartName={selectedPart?.name}
+        onClearSelectedPart={() => setSelectedMesh(null)}
+        onOpenLibrary={() => setIsLibraryOpen(true)}
+      />
 
       {/* ── MAIN WORKSPACE ──────────────────────────────────────── */}
       <main className="flex-1 flex flex-col lg:flex-row overflow-visible lg:overflow-hidden min-h-0">

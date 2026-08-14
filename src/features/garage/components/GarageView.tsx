@@ -85,24 +85,7 @@ export const GarageView: React.FC = () => {
   return (
     <div className="relative min-h-screen lg:h-[100dvh] lg:max-h-[100dvh] w-full bg-[#f4f6f9] text-slate-900 font-sans flex flex-col justify-between p-4 md:p-5 overflow-y-auto lg:overflow-hidden">
       {/* Top Header Navigation */}
-      <header className="esf-panel w-full flex items-center justify-between rounded-2xl px-5 py-3.5 shadow-sm bg-white/90 backdrop-blur-md border border-slate-200 mb-4 lg:mb-5 shrink-0">
-        <div className="hidden md:flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f95738]/10 text-[#f95738] border border-[#f95738]/20">
-            <img src="/images/favicon.ico" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-sm font-extrabold tracking-tight text-slate-900 uppercase">Vehicle Studio</h1>
-            </div>
-            <p className="text-[11px] text-slate-500 font-medium hidden sm:block">
-              View and manage your saved custom vehicle builds.
-            </p>
-          </div>
-        </div>
-
-        {/* Top Navigation */}
-        <Navbar />
-      </header>
+      <Navbar />
 
 
       {/* Main Workspace Layout */}
@@ -303,7 +286,7 @@ export const GarageView: React.FC = () => {
                             e.stopPropagation();
                             handleOpenSavedBuild(build);
                           }}
-                          className="text-[#f95738] font-bold text-[11px] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform"
+                          className="text-stone-900 font-bold text-[11px] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform hover:cursor-pointer hover:text-[#f95738]"
                         >
                           <span>{customCount} parts</span>
                           <ArrowRight size={12} />
@@ -329,7 +312,7 @@ export const GarageView: React.FC = () => {
           <button
             type="button"
             onClick={() => router.push("/build")}
-            className="flex items-center gap-2 py-3 px-6 rounded-2xl bg-[#f95738] hover:bg-[#e0482b] text-white font-extrabold text-xs tracking-wider uppercase transition-all shadow-md active:scale-[0.98]"
+            className="flex items-center gap-2 py-3 px-6 rounded-2xl bg-[#f95738] hover:bg-[#e0482b] hover:cursor-pointer text-white font-extrabold text-xs tracking-wider uppercase transition-all shadow-md active:scale-[0.98]"
           >
             <Car size={16} />
             <span>Explore Base Vehicles</span>

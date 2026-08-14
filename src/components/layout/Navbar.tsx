@@ -4,13 +4,34 @@ import React, { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Wrench, Car, Gauge, Menu, X, ChevronRight, BookOpen } from "lucide-react";
+import { Wrench, CarFront, Menu, X, ChevronRight, BookOpen, ArrowLeft } from "lucide-react";
 
-interface NavbarProps {
+export interface NavbarProps {
+  /** Optional back navigation link (e.g. return to catalog) */
+  backHref?: string;
+  /** Optional vehicle name displayed as breadcrumb */
+  vehicleName?: string;
+  /** Optional active part name pill */
+  selectedPartName?: string;
+  /** Callback to clear active part selection */
+  onClearSelectedPart?: () => void;
+  /** Callback to open vehicle library sheet on mobile */
   onOpenLibrary?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenLibrary }) => {
+/**
+ * Global Navbar for Vehicle Studio.
+ *
+ * Minimal, clean, premium and editorial navigation sitting directly on the
+ * page background with soft pill active states and Lucide icons.
+ */
+export const Navbar: React.FC<NavbarProps> = ({
+  backHref,
+  vehicleName,
+  selectedPartName,
+  onClearSelectedPart,
+  onOpenLibrary,
+}) => {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
@@ -22,10 +43,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLibrary }) => {
     setMounted(true);
   }, []);
 
-  // Active route matching (ignoring query params like ?view=... or ?vehicle=...)
+  // Active route matching (query parameters like ?vehicle=... preserve the active section)
   const isBuildActive = pathname === "/build" || pathname.startsWith("/build?");
   const isGarageActive = pathname === "/garage" || pathname.startsWith("/garage?");
-  const isTestActive = pathname === "/test" || pathname.startsWith("/test?");
 
   // Open drawer with smooth entrance animation
   const handleOpen = useCallback(() => {
@@ -72,87 +92,144 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLibrary }) => {
   const navItems = [
     {
       id: "build",
-      label: "BUILD",
+      label: "Build",
       href: "/build",
-      icon: Car,
+      icon: Wrench,
       isActive: isBuildActive,
     },
     {
       id: "garage",
-      label: "GARAGE",
+      label: "Garage",
       href: "/garage",
-      icon: Wrench,
+      icon: CarFront,
       isActive: isGarageActive,
     },
   ];
 
   return (
     <>
-      {/* ── DESKTOP NAVIGATION BAR (Visible on md breakpoint & above) ──────── */}
-      <nav className="hidden md:flex items-center gap-1 bg-stone-100/90 p-1 rounded-2xl border border-stone-200/80 shadow-2xs">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          if (item.isActive) {
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={(e) => e.preventDefault()}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold tracking-wider uppercase transition-all bg-[#e0564d] text-white shadow-xs cursor-default select-none"
-              >
-                <Icon size={14} />
-                <span>{item.label}</span>
-              </button>
-            );
-          }
-
-          return (
+      {/* ── GLOBAL NAVBAR CONTAINER (Sits directly on page background) ─────── */}
+      <header className="w-full flex items-center justify-between py-3 pl-3 sm:pl-6 md:pl-8 pr-4 sm:pr-8 md:pr-10 lg:pr-12 mb-3 lg:mb-4 shrink-0 select-none bg-transparent">
+        {/* Left: Branding & Vehicle Context */}
+        <div className="flex items-center gap-3">
+          {backHref ? (
             <Link
-              key={item.id}
-              href={item.href}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold tracking-wider uppercase transition-all text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 font-semibold"
+              href={backHref}
+              className="h-8 w-8 rounded-full bg-white/80 hover:bg-white text-stone-600 hover:text-stone-900 border border-stone-200/70 flex items-center justify-center transition-all shadow-2xs hover:shadow-xs active:scale-95"
+              title="Return to Vehicle Selection"
             >
-              <Icon size={14} />
-              <span>{item.label}</span>
+              <ArrowLeft size={15} />
             </Link>
-          );
-        })}
-      </nav>
+          ) : (
+            <Link href="/build" className="flex items-center gap-2.5 group">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-stone-900 text-white shadow-2xs group-hover:scale-105 transition-transform">
+                <img src="/images/favicon.ico" alt="" className="h-4 w-4" />
+              </div>
+            </Link>
+          )}
 
-      {/* ── MOBILE HEADER CONTROLS (Visible on screens smaller than md) ──── */}
-      <div className="flex md:hidden items-center gap-2">
-        {onOpenLibrary && (
+          <div className="flex items-center gap-2">
+            <Link
+              href="/build"
+              className="text-xs sm:text-sm font-black uppercase tracking-wider text-stone-900 hover:text-stone-700 transition-colors font-sans"
+            >
+              Vehicle Studio
+            </Link>
+            {vehicleName && (
+              <>
+                <span className="text-stone-300 text-xs font-light select-none">/</span>
+                <span className="text-xs font-bold text-stone-600 hidden sm:inline truncate max-w-[200px]">
+                  {vehicleName}
+                </span>
+              </>
+            )}
+          </div>
+
+          {selectedPartName && (
+            <div className="hidden md:flex items-center gap-1.5 bg-white/80 border border-stone-200/80 rounded-full px-2.5 py-0.5 ml-1 shadow-2xs animate-in fade-in duration-150">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#e0564d]" />
+              <span className="text-[11px] font-bold text-stone-800 truncate max-w-[140px]">
+                {selectedPartName}
+              </span>
+              {onClearSelectedPart && (
+                <button
+                  type="button"
+                  onClick={onClearSelectedPart}
+                  className="text-stone-400 hover:text-stone-700 transition-colors ml-0.5 cursor-pointer"
+                  aria-label="Clear part selection"
+                >
+                  <X size={11} />
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Right: Desktop Horizontal Navigation with Soft Pill Active State */}
+        <nav className="hidden md:flex items-center gap-3 lg:gap-4">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            if (item.isActive) {
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={(e) => e.preventDefault()}
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/95 border border-stone-200/80 shadow-2xs text-stone-900 text-xs font-extrabold tracking-wider uppercase cursor-default select-none transition-all"
+                >
+                  <Icon size={14} className="text-[#e0564d]" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            }
+
+            return (
+              <Link
+                key={item.id}
+                href={item.href}
+                className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-wider uppercase text-stone-500 hover:text-stone-900 hover:bg-stone-200/40 transition-all"
+              >
+                <Icon size={14} className="text-stone-400 group-hover:text-stone-700" />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Mobile Header Controls */}
+        <div className="flex md:hidden items-center gap-2">
+          {onOpenLibrary && (
+            <button
+              type="button"
+              onClick={onOpenLibrary}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/90 border border-stone-200/80 text-stone-800 hover:bg-white transition-all shadow-2xs active:scale-[0.97] cursor-pointer"
+              aria-label="Open Vehicle Library"
+            >
+              <BookOpen size={14} className="text-[#e0564d]" />
+              <span className="text-xs font-extrabold uppercase tracking-wider text-stone-900 font-mono">
+                Library
+              </span>
+            </button>
+          )}
+
           <button
             type="button"
-            onClick={onOpenLibrary}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#e8e2d5] text-stone-800 hover:bg-stone-50 transition-all shadow-2xs active:scale-[0.97] cursor-pointer"
-            aria-label="Open Vehicle Library"
+            onClick={handleOpen}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/80 border border-stone-200/70 text-stone-800 hover:bg-white transition-colors shadow-2xs active:scale-[0.97] cursor-pointer"
+            aria-label="Open Navigation Menu"
           >
-            <BookOpen size={14} className="text-[#e0564d]" />
-            <span className="text-xs font-extrabold uppercase tracking-wider text-stone-900 font-mono">
-              Library
+            <Menu size={18} className="text-stone-700" />
+            <span className="hidden sm:inline text-xs font-black uppercase tracking-wider text-stone-900 font-mono">
+              MENU
             </span>
           </button>
-        )}
-
-        <button
-          type="button"
-          onClick={handleOpen}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-stone-100 border border-stone-200 text-stone-800 hover:bg-stone-200/70 transition-colors shadow-2xs active:scale-[0.97]"
-          aria-label="Open Navigation Menu"
-        >
-          <Menu size={18} className="text-stone-700" />
-          <span className="hidden sm:inline text-xs font-black uppercase tracking-wider text-stone-900 font-mono">
-            VEHICLE STUDIO
-          </span>
-        </button>
-      </div>
+        </div>
+      </header>
 
       {/* ── PORTAL MOBILE NAVIGATION DRAWER OVERLAY ─────────────────────── */}
-      {/* Renders directly into document.body with premium cubic-bezier easing */}
       {mounted && isPortalOpen && createPortal(
         <div className="md:hidden">
-          {/* Full Viewport Dark Overlay with smooth opacity transition */}
+          {/* Full Viewport Backdrop */}
           <div
             className="fixed inset-0 z-[9998] bg-stone-900/40 backdrop-blur-xs"
             style={{
@@ -165,7 +242,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLibrary }) => {
             aria-hidden="true"
           />
 
-          {/* Viewport-Level Left Slide Drawer with premium cubic-bezier easing */}
+          {/* Left Slide Drawer */}
           <aside
             className="fixed top-0 left-0 bottom-0 z-[9999] h-[100dvh] w-72 max-w-[80vw] bg-[#f7f4ed] border-r border-[#e8e2d5] shadow-2xl flex flex-col justify-between"
             style={{
@@ -179,7 +256,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLibrary }) => {
             <div>
               <div className="flex items-center justify-between p-4 border-b border-[#e8e2d5]">
                 <div className="flex items-center gap-2">
-                  <img src="/images/favicon.ico" alt="" className="h-6 w-6" />
+                  <div className="flex h-6 w-6 items-center justify-center rounded-md bg-stone-900 text-white shadow-xs">
+                    <img src="/images/favicon.ico" alt="" className="h-3.5 w-3.5" />
+                  </div>
                   <div>
                     <h2 className="text-xs font-black uppercase tracking-wider text-stone-900">
                       VEHICLE STUDIO
@@ -199,8 +278,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLibrary }) => {
 
               {/* Navigation Links */}
               <div className="p-3 space-y-1.5">
-                <span className="text-[9px] font-bold uppercase tracking-widest text-stone-400 px-3 block mb-2">
-                  Global Navigation
+                <span className="text-[9px] font-bold uppercase tracking-widest text-stone-400 px-3 block mb-2 font-mono">
+                  NAVIGATION
                 </span>
 
                 {navItems.map((item) => {
@@ -209,13 +288,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLibrary }) => {
                     return (
                       <div
                         key={item.id}
-                        className="flex items-center justify-between w-full px-3.5 py-3 rounded-xl bg-[#e0564d] text-white font-extrabold text-xs uppercase tracking-wider shadow-sm cursor-default"
+                        className="flex items-center justify-between w-full px-3.5 py-3 rounded-xl bg-white border border-[#e8e2d5] text-stone-900 font-extrabold text-xs uppercase tracking-wider shadow-2xs cursor-default"
                       >
                         <div className="flex items-center gap-2.5">
-                          <Icon size={16} />
+                          <Icon size={16} className="text-[#e0564d]" />
                           <span>{item.label}</span>
                         </div>
-                        <span className="text-[9px] bg-white/20 px-2 py-0.5 rounded-md font-mono">
+                        <span className="text-[9px] bg-stone-100 text-stone-600 px-2 py-0.5 rounded-md font-mono border border-stone-200">
                           Active
                         </span>
                       </div>

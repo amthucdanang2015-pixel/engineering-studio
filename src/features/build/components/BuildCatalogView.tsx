@@ -37,24 +37,7 @@ export const BuildCatalogView: React.FC = () => {
   return (
     <div className="relative min-h-screen lg:h-[100dvh] lg:max-h-[100dvh] w-full bg-[#f4f6f9] text-slate-900 font-sans flex flex-col justify-between p-4 md:p-5 overflow-y-auto lg:overflow-hidden">
       {/* ── TOP HEADER NAVIGATION BAR ──────────────────────────────── */}
-      <header className="esf-panel w-full flex items-center justify-between rounded-2xl px-5 py-3.5 shadow-sm bg-white/90 backdrop-blur-md border border-slate-200 mb-4 lg:mb-5 shrink-0">
-        <div className="hidden md:flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f95738]/10 text-[#f95738] border border-[#f95738]/20">
-            <img src="/images/favicon.ico" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-sm font-extrabold tracking-tight text-slate-900 uppercase">Vehicle Studio</h1>
-            </div>
-            <p className="text-[11px] text-slate-500 font-medium hidden sm:block">
-              View and manage your saved custom vehicle builds.
-            </p>
-          </div>
-        </div>
-
-        {/* Top Navigation */}
-        <Navbar />
-      </header>
+      <Navbar />
 
       {/* ── MAIN STUDIO WORKSPACE LAYOUT ───────────────────────────── */}
       <div className="flex-1 flex flex-col lg:flex-row min-h-0 lg:h-[calc(100dvh-56px)] overflow-visible lg:overflow-hidden">
