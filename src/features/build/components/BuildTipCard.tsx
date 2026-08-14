@@ -23,15 +23,13 @@ export const BuildTipCard: React.FC<BuildTipCardProps> = ({ modelLoaded }) => {
   const [visible, setVisible] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Show 600ms after model loads; hide immediately if model unloads
+  // Show 600ms after model loads; once visible, stay visible regardless of loading state
   useEffect(() => {
-    if (modelLoaded) {
+    if (modelLoaded && !visible) {
       timerRef.current = setTimeout(() => setVisible(true), 600);
-    } else {
-      setVisible(false);
     }
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [modelLoaded]);
+  }, [modelLoaded, visible]);
 
   if (!visible) return null;
 

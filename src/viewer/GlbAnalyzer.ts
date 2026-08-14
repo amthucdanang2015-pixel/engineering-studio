@@ -25,12 +25,12 @@ interface KeywordRule {
  * We never guess from these — if the artist named it "glass" it IS glass.
  */
 const MATERIAL_NAME_RULES: KeywordRule[] = [
-  { pattern: /paint|carpaint|body(?!_sg|_mat)|lacquer|basecoat|basecolor|colour|color(?:_\d)?$/i, class: "paint" },
+  { pattern: /paint|carpaint|body(?!_sg|_mat)|roof|roofshell|lacquer|basecoat|basecolor|colour|color(?:_\d)?$/i, class: "paint" },
   { pattern: /glass|window|windshield|visor|windows|glazing|windscreen/i,                          class: "glass" },
-  { pattern: /rim|alloy|spoke|hub(?:cap)?|caliper|brake/i,                                         class: "rim" },
+  { pattern: /rim|alloy|spoke|hub(?:cap)?|caliper|brake|wheel(?:detail)?/i,                       class: "rim" },
   { pattern: /tir[ey]|rubber(?:_\d)?$/i,                                                           class: "tire" },
   { pattern: /light|lamp|led|headlight|taillight|luminar|blinker|turn/i,                           class: "light" },
-  { pattern: /chrome|trim|grille|bumper(?:_\d)?$|mirror|plastic(?:_\d)?$|pillar/i,                class: "trim" },
+  { pattern: /chrome|trim|grille|bumper(?:_\d)?$|mirror|plastic(?:_\d)?$|pillar|accent/i,         class: "trim" },
   { pattern: /seat|interior|cabin|dash(?:board)?|steering|cockpit|console|carpet/i,                class: "interior" },
 ];
 

@@ -679,11 +679,16 @@ export class AnatomyViewer {
     // Ensure vehicleRoot's matrix chain is current (traverses 3 levels — very cheap)
     this.vehicleRoot.updateWorldMatrix(true, false);
     const worldPos = new THREE.Vector3(lx, ly, lz).applyMatrix4(this.vehicleRoot.matrixWorld);
+
+    // Robust camera-space Z check (points behind camera have camera-space z > -near)
+    const cameraSpacePos = worldPos.clone().applyMatrix4(this.camera.matrixWorldInverse);
+    const isBehind = cameraSpacePos.z > -this.camera.near;
+
     worldPos.project(this.camera);
     return {
       x: (worldPos.x * 0.5 + 0.5) * 100,
       y: (-worldPos.y * 0.5 + 0.5) * 100,
-      behindCamera: worldPos.z > 1,
+      behindCamera: isBehind || worldPos.z > 1,
     };
   }
 
@@ -691,6 +696,10 @@ export class AnatomyViewer {
    * Returns a VehicleRoot-local anchor for one existing selectable mesh. It is
    * deliberately keyed by the GLB mesh ID used by the component list, not by a
    * generated semantic category.
+   *
+   * Uses the world-space bounding box centre of the mesh geometry (converted to
+   * vehicle-local space), which is reliable even for GLBs where all mesh pivots
+   * are baked to the origin.
    */
   getMeshAnchor(meshName: string): { x: number; y: number; z: number } | null {
     const cached = this.meshAnchorCache.get(meshName);
@@ -700,10 +709,19 @@ export class AnatomyViewer {
     if (!mesh) return null;
     this.vehicleRoot.updateWorldMatrix(true, false);
     const rootInverse = new THREE.Matrix4().copy(this.vehicleRoot.matrixWorld).invert();
-    // Use the target object's own transform origin rather than its geometry
-    // bounds. Vehicle meshes can have offset/baked geometry, whereas the GLB
-    // node transform is the stable physical anchor for the selected component.
-    const anchor = mesh.getWorldPosition(new THREE.Vector3()).applyMatrix4(rootInverse);
+
+    // Compute the world-space bounding box of the mesh geometry and use its
+    // centre as the anchor. This is reliable for GLBs where mesh pivots are
+    // baked to the origin and getWorldPosition() would return (0,0,0) for all.
+    const worldBox = new THREE.Box3().setFromObject(mesh);
+    let anchor: THREE.Vector3;
+    if (worldBox.isEmpty()) {
+      // Fallback: use the mesh node's world position if geometry is empty
+      anchor = mesh.getWorldPosition(new THREE.Vector3()).applyMatrix4(rootInverse);
+    } else {
+      anchor = worldBox.getCenter(new THREE.Vector3()).applyMatrix4(rootInverse);
+    }
+
     this.meshAnchorCache.set(meshName, anchor.clone());
     return { x: anchor.x, y: anchor.y, z: anchor.z };
   }

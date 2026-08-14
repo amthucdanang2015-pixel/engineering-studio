@@ -27,13 +27,49 @@ import type { PartMaterialConfig } from "@/core/domain/vehicle";
 import type { VehicleCustomization } from "@/core/domain/vehicleCustomization";
 
 import { VehicleLibrarySheet } from "./VehicleLibrarySheet";
-import { BuildDotsOverlay } from "./BuildDotsOverlay";
+import { BuildDotsOverlay, type CapabilityPoint } from "./BuildDotsOverlay";
 import { BuildTipCard } from "./BuildTipCard";
 
-// These are implementation meshes from the current car asset. They are not
-// independently activatable through the existing component-selection UI, so
-// they must never be exposed as point targets.
-const NON_ACTIVATABLE_POINT_ID = /^(Exterior_Trim_\d+|Body_AeroPanel_\d+)$/;
+// ─────────────────────────────────────────────────────────────────────────────
+// CUSTOMIZABLE ITEMS & DOT CONFIGURATION
+// Derives dots directly from existing customizable/clickable components.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Exclude micro-fragments, inner sub-shells, and non-customizable environment meshes */
+const EXCLUDED_MESH_PATTERNS = [
+  /^Exterior_Trim_\d+$/i,     // Micro trim polygon fragments
+  /^Body_AeroPanel_\d+$/i,    // Micro aero panel slices
+  /^Body_RoofShell_1$/i,      // Inner roof shell when Body_RoofShell_2 is the primary visible outer roof
+  /^Wheel_[FR]_[LR]_Hub$/i,   // Inner wheel axle hub (rim & tire are the primary wheel targets)
+  /^Interior$/i,              // Interior cabin
+  /^Ground$/i,                // Floor / shadow plane
+  /^world$/i,                 // Root node
+];
+
+function isCustomizableItem(meshName: string): boolean {
+  for (const pattern of EXCLUDED_MESH_PATTERNS) {
+    if (pattern.test(meshName)) return false;
+  }
+  return true;
+}
+
+function getDotColor(meshName: string): string {
+  const lower = meshName.toLowerCase();
+  if (lower.includes("roof")) return "#eab308"; // Amber / Roof
+  if (lower.includes("glass") || lower.includes("window")) return "#06b6d4"; // Cyan / Glass
+  if (lower.includes("rim") || lower.includes("spoke") || lower.includes("alloy")) return "#3b82f6"; // Blue / Rim
+  if (lower.includes("tire") || lower.includes("tyre") || lower.includes("rubber")) return "#64748b"; // Slate / Tire
+  if (lower.includes("light") || lower.includes("lamp") || lower.includes("headlight") || lower.includes("taillight")) return "#f97316"; // Orange / Light
+  if (lower.includes("trim") || lower.includes("grille") || lower.includes("mirror") || lower.includes("bumper")) return "#a855f7"; // Purple / Trim
+  return "#22c55e"; // Emerald / Body Paint
+}
+
+function getDotLabel(meshName: string): string {
+  return meshName
+    .replace(/Wheel_([FR])_([LR])_/i, "Wheel $1$2 ")
+    .replace(/_/g, " ")
+    .trim();
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BUILD WORKSPACE CONTENT
@@ -82,20 +118,17 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
 
   const hoveredPart = getPartByMeshName(hoveredMeshName);
 
-  // The analyzer's capability report is the existing customization registry.
-  // Resolve one actual component-list ID per customizable material capability;
-  // never derive points by enumerating every loaded GLB mesh.
-  const customizationPointIds = useMemo(() => {
-    const selectableIds = new Set(availableMeshNames);
-    const resolvedIds = vehicleCapabilities.allMaterials
-      .filter((material) => material.isCustomizable)
-      .map((material) => material.meshNames.find(
-        (meshName) => selectableIds.has(meshName) && !NON_ACTIVATABLE_POINT_ID.test(meshName)
-      ))
-      .filter((meshName): meshName is string => meshName !== undefined);
-
-    return [...new Set(resolvedIds)];
-  }, [availableMeshNames, vehicleCapabilities]);
+  // Derive customization dots from actual clickable/customizable car items.
+  // Each point anchors to the exact 3D mesh and triggers identical component selection.
+  const capabilityPoints = useMemo((): CapabilityPoint[] => {
+    return availableMeshNames
+      .filter(isCustomizableItem)
+      .map((meshName) => ({
+        meshId: meshName,
+        label: getDotLabel(meshName),
+        color: getDotColor(meshName),
+      }));
+  }, [availableMeshNames]);
 
   /** Saved baseline refs — used for dirty checking and discard */
   const savedOverridesRef = useRef<Record<string, Partial<PartMaterialConfig>>>({});
@@ -317,9 +350,9 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
           {/* 3D capability dots — follow the vehicle as it rotates/zooms */}
           <BuildDotsOverlay
             viewerRef={viewerRef}
-            componentIds={customizationPointIds}
-            selectedComponentId={selectedMeshName}
-            onSelectComponent={setSelectedMesh}
+            points={capabilityPoints}
+            selectedMeshId={selectedMeshName}
+            onSelectMesh={setSelectedMesh}
             modelLoaded={!loading}
           />
 
