@@ -105,35 +105,35 @@ function generateSportsCarGlb() {
     const hx = sx / 2, hy = sy / 2, hz = sz / 2;
     const positions = new Float32Array([
       // Front
-      -hx, -hy,  hz,   hx, -hy,  hz,   hx,  hy,  hz,  -hx,  hy,  hz,
+      -hx, -hy, hz, hx, -hy, hz, hx, hy, hz, -hx, hy, hz,
       // Back
-       hx, -hy, -hz,  -hx, -hy, -hz,  -hx,  hy, -hz,   hx,  hy, -hz,
+      hx, -hy, -hz, -hx, -hy, -hz, -hx, hy, -hz, hx, hy, -hz,
       // Top
-      -hx,  hy,  hz,   hx,  hy,  hz,   hx,  hy, -hz,  -hx,  hy, -hz,
+      -hx, hy, hz, hx, hy, hz, hx, hy, -hz, -hx, hy, -hz,
       // Bottom
-      -hx, -hy, -hz,   hx, -hy, -hz,   hx, -hy,  hz,  -hx, -hy,  hz,
+      -hx, -hy, -hz, hx, -hy, -hz, hx, -hy, hz, -hx, -hy, hz,
       // Right
-       hx, -hy,  hz,   hx, -hy, -hz,   hx,  hy, -hz,   hx,  hy,  hz,
+      hx, -hy, hz, hx, -hy, -hz, hx, hy, -hz, hx, hy, hz,
       // Left
-      -hx, -hy, -hz,  -hx, -hy,  hz,  -hx,  hy,  hz,  -hx,  hy, -hz
+      -hx, -hy, -hz, -hx, -hy, hz, -hx, hy, hz, -hx, hy, -hz
     ]);
 
     const normals = new Float32Array([
-       0, 0, 1,   0, 0, 1,   0, 0, 1,   0, 0, 1,
-       0, 0,-1,   0, 0,-1,   0, 0,-1,   0, 0,-1,
-       0, 1, 0,   0, 1, 0,   0, 1, 0,   0, 1, 0,
-       0,-1, 0,   0,-1, 0,   0,-1, 0,   0,-1, 0,
-       1, 0, 0,   1, 0, 0,   1, 0, 0,   1, 0, 0,
-      -1, 0, 0,  -1, 0, 0,  -1, 0, 0,  -1, 0, 0
+      0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
+      0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1,
+      0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0,
+      0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0,
+      1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0,
+      -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0
     ]);
 
     const indices = new Uint16Array([
-      0, 1, 2,  0, 2, 3,
-      4, 5, 6,  4, 6, 7,
-      8, 9,10,  8,10,11,
-     12,13,14, 12,14,15,
-     16,17,18, 16,18,19,
-     20,21,22, 20,22,23
+      0, 1, 2, 0, 2, 3,
+      4, 5, 6, 4, 6, 7,
+      8, 9, 10, 8, 10, 11,
+      12, 13, 14, 12, 14, 15,
+      16, 17, 18, 16, 18, 19,
+      20, 21, 22, 20, 22, 23
     ]);
 
     return { positions, normals, indices };
@@ -195,7 +195,7 @@ function generateSportsCarGlb() {
 
   components.forEach((comp, idx) => {
     const geo = buildBoxGeometry(...comp.size);
-    
+
     // Positions BufferView
     const posByteOffset = currentByteOffset;
     const posByteLength = geo.positions.byteLength;
@@ -210,8 +210,8 @@ function generateSportsCarGlb() {
       componentType: 5126, // FLOAT
       count: 24,
       type: "VEC3",
-      max: [comp.size[0]/2, comp.size[1]/2, comp.size[2]/2],
-      min: [-comp.size[0]/2, -comp.size[1]/2, -comp.size[2]/2],
+      max: [comp.size[0] / 2, comp.size[1] / 2, comp.size[2] / 2],
+      min: [-comp.size[0] / 2, -comp.size[1] / 2, -comp.size[2] / 2],
     });
 
     // Normals BufferView
@@ -323,7 +323,7 @@ function generateSportsCarGlb() {
 
   const outputPath = path.join(outputDir, 'ESF_V2_Classic_Sports_Car_Demo.glb');
   fs.writeFileSync(outputPath, glbBuffer);
-  console.log(`✅ Successfully generated ESF V2 Sports Car GLB model at: ${outputPath} (${(glbBuffer.length / 1024).toFixed(1)} KB)`);
+  console.log(`✅ Successfully generated Vehicle Studio Sports Car GLB model at: ${outputPath} (${(glbBuffer.length / 1024).toFixed(1)} KB)`);
 }
 
 generateSportsCarGlb();

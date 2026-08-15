@@ -164,7 +164,7 @@ export const BuildCatalogView: React.FC = () => {
                   <span className="text-[10px] font-extrabold uppercase tracking-wider text-stone-400 font-mono">
                     SPECIFICATION METRICS
                   </span>
-                  <span className="text-[10px] text-stone-400 font-mono">ESF V2 ARCHITECTURE</span>
+                  <span className="text-[10px] text-stone-400 font-mono">Vehicle Studio</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
