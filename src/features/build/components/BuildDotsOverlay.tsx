@@ -77,15 +77,15 @@ export const BuildDotsOverlay: React.FC<BuildDotsOverlayProps> = ({
         const element = dotElementsRef.current.get(point.meshId);
         if (!element) continue;
 
-        const anchor = viewer.getMeshAnchor(point.meshId);
-        if (!anchor) {
+        const pos = viewer.getMeshScreenPosition(point.meshId);
+        if (!pos) {
           element.style.visibility = "hidden";
           continue;
         }
 
-        const pos = viewer.projectVehicleLocalToScreen(anchor.x, anchor.y, anchor.z);
         const inView =
           !pos.behindCamera &&
+          !pos.isOccluded &&
           pos.x >= -4 &&
           pos.x <= 104 &&
           pos.y >= -4 &&

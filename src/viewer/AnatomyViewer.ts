@@ -657,7 +657,104 @@ export class AnatomyViewer {
     this.dirty = true;
   }
 
+  private occlusionRaycaster = new THREE.Raycaster();
+
+  private isSamePartAssembly(targetName: string, hitName: string): boolean {
+    if (targetName === hitName) return true;
+    const t = targetName.toLowerCase();
+    const h = hitName.toLowerCase();
+
+    // Wheel assemblies: Wheel_FR_..., Wheel_FL_..., Wheel_RR_..., Wheel_RL_...
+    const wheelMatchT = t.match(/wheel[_\s]+([frl]{2})/i);
+    const wheelMatchH = h.match(/wheel[_\s]+([frl]{2})/i);
+    if (wheelMatchT && wheelMatchH && wheelMatchT[1].toLowerCase() === wheelMatchH[1].toLowerCase()) {
+      return true;
+    }
+
+    return false;
+  }
+
   // ── 3D Dot Overlay API ────────────────────────────────────────────────────
+
+  /**
+   * Directly projects a vehicle mesh's real-time 3D world position to 2D screen percentages (0% to 100%).
+   * Uses the mesh's live world matrix, camera projection, and raycast depth occlusion testing.
+   * Automatically accounts for:
+   * - parent transforms
+   * - VehicleRoot transforms & rotation
+   * - camera orbit rotation & zoom distance
+   * - 3D occlusion behind vehicle body or far-side panels
+   */
+  getMeshScreenPosition(meshName: string): { x: number; y: number; behindCamera: boolean; isOccluded: boolean } | null {
+    const mesh = this.currentAsset?.meshMap.get(meshName);
+    if (!mesh) return null;
+
+    // Ensure matrix hierarchy and camera are up to date
+    mesh.updateWorldMatrix(true, false);
+    this.camera.updateMatrixWorld(true);
+
+    const worldPos = new THREE.Vector3();
+    if (mesh.geometry) {
+      if (!mesh.geometry.boundingBox) {
+        mesh.geometry.computeBoundingBox();
+      }
+      if (mesh.geometry.boundingBox) {
+        mesh.geometry.boundingBox.getCenter(worldPos);
+        worldPos.applyMatrix4(mesh.matrixWorld);
+      } else {
+        mesh.getWorldPosition(worldPos);
+      }
+    } else {
+      mesh.getWorldPosition(worldPos);
+    }
+
+    // Camera space Z for behind-camera check (camera looks down -Z)
+    const cameraSpacePos = worldPos.clone().applyMatrix4(this.camera.matrixWorldInverse);
+    const isBehind = cameraSpacePos.z >= -this.camera.near;
+
+    // Raycast depth occlusion check from camera to target anchor
+    let isOccluded = false;
+    if (!isBehind && this.currentAsset && this.currentAsset.meshes.length > 0) {
+      const camPos = this.camera.position;
+      const targetDist = camPos.distanceTo(worldPos);
+      const rayDir = worldPos.clone().sub(camPos).normalize();
+
+      this.occlusionRaycaster.set(camPos, rayDir);
+      this.occlusionRaycaster.near = this.camera.near;
+      this.occlusionRaycaster.far = targetDist + 0.1;
+
+      const intersects = this.occlusionRaycaster.intersectObjects(this.currentAsset.meshes, false);
+      for (const hit of intersects) {
+        // If the hit object is the target itself or part of the same assembly (e.g. tire vs rim of same wheel)
+        if (hit.object === mesh || this.isSamePartAssembly(mesh.name, hit.object.name)) {
+          // Reached the target surface without prior obstruction!
+          break;
+        }
+
+        // If a different opaque mesh is hit significantly in front of our target
+        if (hit.distance < targetDist - 0.06) {
+          const mat = (hit.object as THREE.Mesh).material;
+          const isTransparentGlass = Array.isArray(mat)
+            ? mat.some((m) => m.transparent && m.opacity < 0.6)
+            : (mat as THREE.Material)?.transparent && (mat as THREE.Material)?.opacity < 0.6;
+
+          if (!isTransparentGlass) {
+            isOccluded = true;
+            break;
+          }
+        }
+      }
+    }
+
+    worldPos.project(this.camera);
+
+    return {
+      x: (worldPos.x * 0.5 + 0.5) * 100,
+      y: (-worldPos.y * 0.5 + 0.5) * 100,
+      behindCamera: isBehind || worldPos.z > 1,
+      isOccluded,
+    };
+  }
 
   /**
    * Returns the vehicle bounding box in VehicleRoot-LOCAL space (rotation=0, scale=1).
@@ -671,18 +768,14 @@ export class AnatomyViewer {
   /**
    * Transforms a point from VehicleRoot-LOCAL space → world space (applying live
    * rotation and scale) → camera projection → viewport-percentage coordinates.
-   *
-   * This is the correct method for dot anchors that must follow vehicle rotation/zoom.
-   * Call every animation frame; it is cheap (one matrix multiply + project).
    */
   projectVehicleLocalToScreen(lx: number, ly: number, lz: number): { x: number; y: number; behindCamera: boolean } {
-    // Ensure vehicleRoot's matrix chain is current (traverses 3 levels — very cheap)
     this.vehicleRoot.updateWorldMatrix(true, false);
+    this.camera.updateMatrixWorld(true);
     const worldPos = new THREE.Vector3(lx, ly, lz).applyMatrix4(this.vehicleRoot.matrixWorld);
 
-    // Robust camera-space Z check (points behind camera have camera-space z > -near)
     const cameraSpacePos = worldPos.clone().applyMatrix4(this.camera.matrixWorldInverse);
-    const isBehind = cameraSpacePos.z > -this.camera.near;
+    const isBehind = cameraSpacePos.z >= -this.camera.near;
 
     worldPos.project(this.camera);
     return {
@@ -693,37 +786,32 @@ export class AnatomyViewer {
   }
 
   /**
-   * Returns a VehicleRoot-local anchor for one existing selectable mesh. It is
-   * deliberately keyed by the GLB mesh ID used by the component list, not by a
-   * generated semantic category.
-   *
-   * Uses the world-space bounding box centre of the mesh geometry (converted to
-   * vehicle-local space), which is reliable even for GLBs where all mesh pivots
-   * are baked to the origin.
+   * Returns a VehicleRoot-local anchor for one existing selectable mesh.
    */
   getMeshAnchor(meshName: string): { x: number; y: number; z: number } | null {
-    const cached = this.meshAnchorCache.get(meshName);
-    if (cached) return { x: cached.x, y: cached.y, z: cached.z };
-
     const mesh = this.currentAsset?.meshMap.get(meshName);
     if (!mesh) return null;
+    mesh.updateWorldMatrix(true, false);
     this.vehicleRoot.updateWorldMatrix(true, false);
     const rootInverse = new THREE.Matrix4().copy(this.vehicleRoot.matrixWorld).invert();
 
-    // Compute the world-space bounding box of the mesh geometry and use its
-    // centre as the anchor. This is reliable for GLBs where mesh pivots are
-    // baked to the origin and getWorldPosition() would return (0,0,0) for all.
-    const worldBox = new THREE.Box3().setFromObject(mesh);
-    let anchor: THREE.Vector3;
-    if (worldBox.isEmpty()) {
-      // Fallback: use the mesh node's world position if geometry is empty
-      anchor = mesh.getWorldPosition(new THREE.Vector3()).applyMatrix4(rootInverse);
+    const worldPos = new THREE.Vector3();
+    if (mesh.geometry) {
+      if (!mesh.geometry.boundingBox) {
+        mesh.geometry.computeBoundingBox();
+      }
+      if (mesh.geometry.boundingBox) {
+        mesh.geometry.boundingBox.getCenter(worldPos);
+        worldPos.applyMatrix4(mesh.matrixWorld);
+      } else {
+        mesh.getWorldPosition(worldPos);
+      }
     } else {
-      anchor = worldBox.getCenter(new THREE.Vector3()).applyMatrix4(rootInverse);
+      mesh.getWorldPosition(worldPos);
     }
 
-    this.meshAnchorCache.set(meshName, anchor.clone());
-    return { x: anchor.x, y: anchor.y, z: anchor.z };
+    const localAnchor = worldPos.applyMatrix4(rootInverse);
+    return { x: localAnchor.x, y: localAnchor.y, z: localAnchor.z };
   }
 
   /**
