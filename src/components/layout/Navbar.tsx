@@ -20,7 +20,7 @@ export interface NavbarProps {
 }
 
 /**
- * Global Navbar for Vehicle Studio.
+ * Global Navbar for HEXACAR.
  *
  * Minimal, clean, premium and editorial navigation sitting directly on the
  * page background with soft pill active states and Lucide icons.
@@ -108,62 +108,60 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      {/* ── GLOBAL NAVBAR CONTAINER (Sits directly on page background) ─────── */}
-      <header className="w-full flex items-center justify-between py-3 pl-3 sm:pl-6 md:pl-8 pr-4 sm:pr-8 md:pr-10 lg:pr-12 mb-3 lg:mb-4 shrink-0 select-none bg-transparent">
-        {/* Left: Branding & Vehicle Context */}
-        <div className="flex items-center gap-3">
-          {backHref ? (
-            <Link
-              href={backHref}
-              className="h-8 w-8 rounded-full bg-white/80 hover:bg-white text-stone-600 hover:text-stone-900 border border-stone-200/70 flex items-center justify-center transition-all shadow-2xs hover:shadow-xs active:scale-95"
-              title="Return to Vehicle Selection"
-            >
-              <ArrowLeft size={15} />
-            </Link>
-          ) : (
-            <Link href="/build" className="flex items-center gap-2.5 group">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-stone-900 text-white shadow-2xs group-hover:scale-105 transition-transform">
-                <img src="/images/favicon.ico" alt="" className="h-4 w-4" />
-              </div>
-            </Link>
-          )}
-
-          <div className="flex items-center gap-2">
-            <Link
-              href="/build"
-              className="text-xs sm:text-sm font-black uppercase tracking-wider text-stone-900 hover:text-stone-700 transition-colors font-sans"
-            >
-              Vehicle Studio
-            </Link>
-            {vehicleName && (
-              <>
-                <span className="text-stone-300 text-xs font-light select-none">/</span>
-                <span className="text-xs font-bold text-stone-600 hidden sm:inline truncate max-w-[200px]">
-                  {vehicleName}
-                </span>
-              </>
-            )}
-          </div>
-
-          {selectedPartName && (
-            <div className="hidden md:flex items-center gap-1.5 bg-white/80 border border-stone-200/80 rounded-full px-2.5 py-0.5 ml-1 shadow-2xs animate-in fade-in duration-150">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#e0564d]" />
-              <span className="text-[11px] font-bold text-stone-800 truncate max-w-[140px]">
-                {selectedPartName}
-              </span>
-              {onClearSelectedPart && (
-                <button
-                  type="button"
-                  onClick={onClearSelectedPart}
-                  className="text-stone-400 hover:text-stone-700 transition-colors ml-0.5 cursor-pointer"
-                  aria-label="Clear part selection"
-                >
-                  <X size={11} />
-                </button>
-              )}
+      <header className="w-full flex items-center justify-between py-3 pl-3 sm:pl-6 md:pl-8 pr-4 sm:pr-8 md:pr-10 lg:pr-12 mb-3 lg:mb-4 shrink-0 select-none bg-transparent">        <div className="flex items-center gap-3">
+        {backHref ? (
+          <Link
+            href={backHref}
+            className="h-8 w-8 rounded-full bg-white/80 hover:bg-white text-stone-600 hover:text-stone-900 border border-stone-200/70 flex items-center justify-center transition-all shadow-2xs hover:shadow-xs active:scale-95"
+            title="Return to Vehicle Selection"
+          >
+            <ArrowLeft size={15} />
+          </Link>
+        ) : (
+          <Link href="/build" className="flex items-center gap-2.5 group">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg text-white shadow-2xs group-hover:scale-105 transition-transform">
+              <img src="/images/favicon.ico" alt="" className="h-4 w-4" />
             </div>
+          </Link>
+        )}
+
+        <div className="flex items-center">
+          <Link
+            href="/build"
+            className=" font-black uppercase tracking-wider text-stone-900 hover:text-stone-700 transition-colors font-sans"
+          >
+            <span className="text-[30px] sm:text-xs">HEXACAR</span>
+            <p className="text-[10px] tracking-[0.4em] text-[#82817e]">SIMULATOR</p>
+          </Link>
+          {vehicleName && (
+            <>
+              <span className="text-stone-300 text-xs font-light select-none">/</span>
+              <span className="text-xs font-bold text-stone-600 hidden sm:inline truncate max-w-[200px]">
+                {vehicleName}
+              </span>
+            </>
           )}
         </div>
+
+        {selectedPartName && (
+          <div className="hidden md:flex items-center gap-1.5 bg-white/80 border border-stone-200/80 rounded-full px-2.5 py-0.5 ml-1 shadow-2xs animate-in fade-in duration-150">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#e0564d]" />
+            <span className="text-[11px] font-bold text-stone-800 truncate max-w-[140px]">
+              {selectedPartName}
+            </span>
+            {onClearSelectedPart && (
+              <button
+                type="button"
+                onClick={onClearSelectedPart}
+                className="text-stone-400 hover:text-stone-700 transition-colors ml-0.5 cursor-pointer"
+                aria-label="Clear part selection"
+              >
+                <X size={11} />
+              </button>
+            )}
+          </div>
+        )}
+      </div>
 
         {/* Right: Desktop Horizontal Navigation with Soft Pill Active State */}
         <nav className="hidden md:flex items-center gap-3 lg:gap-4">
@@ -226,7 +224,6 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </header>
 
-      {/* ── PORTAL MOBILE NAVIGATION DRAWER OVERLAY ─────────────────────── */}
       {mounted && isPortalOpen && createPortal(
         <div className="md:hidden">
           {/* Full Viewport Backdrop */}
@@ -261,7 +258,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
                   <div>
                     <h2 className="text-xs font-black uppercase tracking-wider text-stone-900">
-                      VEHICLE STUDIO
+                      HEXACAR
                     </h2>
                   </div>
                 </div>
@@ -321,7 +318,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Drawer Footer */}
             <div className="p-4 border-t border-[#e8e2d5] bg-stone-100/50 text-[10px] text-stone-400 font-mono text-center">
-              Vehicle Studio engineering simulator
+              HEXACAR engineering simulator
             </div>
           </aside>
         </div>,

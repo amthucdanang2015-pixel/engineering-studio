@@ -3,8 +3,8 @@ import { GarageView } from "@/features/garage/components/GarageView";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Garage — Vehicle Studio",
-  description: "Select and configure your Vehicle Studio architecture.",
+  title: "Garage — HEXACAR",
+  description: "Select and configure your HEXACAR architecture.",
 };
 
 export default function GaragePage() {

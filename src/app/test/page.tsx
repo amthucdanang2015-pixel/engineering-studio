@@ -3,8 +3,8 @@ import { TestView } from "@/features/test/components/TestView";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Test Simulation — Vehicle Studio",
-  description: "Vehicle performance testing and aerodynamic simulation suite.",
+  title: "Test Simulation — HEXACAR",
+  description: "HEXACAR performance testing and aerodynamic simulation suite.",
 };
 
 export default function TestPage() {

@@ -323,7 +323,7 @@ function generateSportsCarGlb() {
 
   const outputPath = path.join(outputDir, 'ESF_V2_Classic_Sports_Car_Demo.glb');
   fs.writeFileSync(outputPath, glbBuffer);
-  console.log(`✅ Successfully generated Vehicle Studio Sports Car GLB model at: ${outputPath} (${(glbBuffer.length / 1024).toFixed(1)} KB)`);
+  console.log(`✅ Successfully generated HEXACAR Sports Car GLB model at: ${outputPath} (${(glbBuffer.length / 1024).toFixed(1)} KB)`);
 }
 
 generateSportsCarGlb();
