@@ -3,10 +3,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
-  ArrowLeft,
   Box,
   CheckCircle2,
-  X,
 } from "lucide-react";
 import { AnatomyViewer } from "@/viewer/AnatomyViewer";
 import {
@@ -15,9 +13,9 @@ import {
   isOverridesDirty,
   isCustomizationDirty,
 } from "@/core/state/useVehicleStore";
-import { getVehicleCatalogItem } from "@/core/domain/vehicleCatalog";
+import { VEHICLE_CATALOG, getVehicleCatalogItem } from "@/core/domain/vehicleCatalog";
 import { PartInspectorPanel } from "./PartInspectorPanel";
-import { BuildCatalogView } from "./BuildCatalogView";
+import { VehicleLibrarySidebar } from "./VehicleLibrarySidebar";
 import { Navbar } from "@/components/layout/Navbar";
 import { getSavedVehicleBuilds, saveVehicleBuild, type SavedVehicleBuild } from "@/core/state/savedBuilds";
 import { DEFAULT_VEHICLE_CUSTOMIZATION } from "@/core/domain/vehicleCustomization";
@@ -113,7 +111,6 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
     setAvailableMeshNames,
     setVehicleCustomization,
     setVehicleCapabilities,
-    resetVehicleCustomization,
   } = useVehicleStore();
 
   const hoveredPart = getPartByMeshName(hoveredMeshName);
@@ -295,7 +292,8 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
     setTimeout(() => setNotification(null), 2500);
   };
 
-  const handleSelectVehicleFromSheet = (newVehicleId: string) => {
+  const handleSelectVehicle = (newVehicleId: string) => {
+    if (newVehicleId === activeCatalogItem.id) return;
     router.push(`/build?vehicle=${newVehicleId}`);
   };
 
@@ -303,18 +301,23 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
     <div className="relative min-h-screen lg:h-[100dvh] lg:max-h-[100dvh] w-full bg-[#f4f6f9] text-slate-900 font-sans flex flex-col justify-between p-4 md:p-5 overflow-y-auto lg:overflow-hidden">
       {/* ── TOP HEADER NAVBAR ───────────────────────────────────── */}
       <Navbar
-        backHref="/build"
         vehicleName={activeCatalogItem.name}
         selectedPartName={selectedPart?.name}
         onClearSelectedPart={() => setSelectedMesh(null)}
         onOpenLibrary={() => setIsLibraryOpen(true)}
       />
 
-      {/* ── MAIN WORKSPACE ──────────────────────────────────────── */}
-      <main className="flex-1 flex flex-col lg:flex-row overflow-visible lg:overflow-hidden min-h-0">
+      {/* ── MAIN WORKSPACE: 3-COLUMN STUDIO LAYOUT ──────────────── */}
+      <main className="flex-1 flex flex-col lg:flex-row overflow-visible lg:overflow-hidden min-h-0 gap-3 sm:gap-4 lg:gap-4">
 
-        {/* 3D Viewport */}
-        <div className="w-full lg:flex-1 h-[60vh] min-h-[340px] max-h-[520px] lg:h-full lg:min-h-0 lg:max-h-none relative overflow-hidden bg-[#f2ebd9] touch-pan-y shrink-0 lg:shrink">
+        {/* ── LEFT COLUMN: MODEL LIBRARY SIDEBAR (Screenshot 1 Leftbar) ── */}
+        <VehicleLibrarySidebar
+          selectedVehicleId={activeCatalogItem.id}
+          onSelectVehicle={handleSelectVehicle}
+        />
+
+        {/* ── CENTER COLUMN: 3D VIEWPORT & CONFIGURATOR ─────────── */}
+        <div className="w-full lg:flex-1 h-[60vh] min-h-[340px] max-h-[520px] lg:h-full lg:min-h-0 lg:max-h-none relative rounded-2xl overflow-hidden border border-[#e8e2d5] bg-[#f2ebd9] touch-pan-y shrink-0 lg:shrink flex flex-col">
           <div
             ref={mountRef}
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
@@ -353,10 +356,9 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
           )}
         </div>
 
-        {/* DESKTOP INSPECTOR SIDEBAR */}
+        {/* ── RIGHT COLUMN: DESKTOP CUSTOMIZATION & INSPECTOR SIDEBAR ── */}
         <aside
-          className="hidden lg:flex"
-          style={{ width: "340px", minWidth: "340px", flexShrink: 0, flexDirection: "column", borderLeft: "1px solid #e8e2d5", background: "#f7f4ed", overflow: "hidden" }}
+          className="hidden lg:flex w-full lg:w-80 xl:w-85 shrink-0 flex-col border border-[#e8e2d5] bg-[#f7f4ed] rounded-2xl h-full min-h-0 overflow-hidden"
         >
           <PartInspectorPanel
             capabilities={vehicleCapabilities}
@@ -369,7 +371,7 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
         </aside>
 
         {/* MOBILE / TABLET INSPECTOR */}
-        <div className="lg:hidden w-full border-t border-[#e8e2d5] bg-[#f7f4ed] flex flex-col">
+        <div className="lg:hidden w-full border border-[#e8e2d5] bg-[#f7f4ed] rounded-2xl flex flex-col overflow-hidden">
           <PartInspectorPanel
             capabilities={vehicleCapabilities}
             onUpdateMaterial={handleUpdateMaterial}
@@ -386,7 +388,7 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
         isOpen={isLibraryOpen}
         onClose={() => setIsLibraryOpen(false)}
         selectedVehicleId={activeCatalogItem.id}
-        onSelectVehicle={handleSelectVehicleFromSheet}
+        onSelectVehicle={handleSelectVehicle}
       />
 
       {/* ── LOADING OVERLAY ─────────────────────────────────────── */}
@@ -414,17 +416,24 @@ function BuildWorkspaceContent({ vehicleParam }: { vehicleParam: string }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ROUTE SWITCHER
+// ROUTE CONTAINER WITH AUTOMATIC DEFAULT VEHICLE URL SYNCHRONIZATION
 // ─────────────────────────────────────────────────────────────────────────────
 function VehicleViewerContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const vehicleParam = searchParams.get("vehicle");
 
-  if (!vehicleParam) {
-    return <BuildCatalogView />;
-  }
+  const defaultVehicle = VEHICLE_CATALOG[0];
+  const effectiveVehicleId = vehicleParam || defaultVehicle.id;
 
-  return <BuildWorkspaceContent vehicleParam={vehicleParam} />;
+  // If no vehicle query param, synchronize the URL to the default vehicle
+  useEffect(() => {
+    if (!vehicleParam) {
+      router.replace(`/build?vehicle=${defaultVehicle.id}`, { scroll: false });
+    }
+  }, [vehicleParam, router, defaultVehicle.id]);
+
+  return <BuildWorkspaceContent vehicleParam={effectiveVehicleId} />;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
