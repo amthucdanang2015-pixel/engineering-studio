@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Engineering Simulator Framework (ESF) — V2",
+  title: "Vehicle Studio - HEXACAR",
   description: "Professional interactive 3D vehicle viewer built with direct Three.js, GSAP, and Next.js based on Anatomy reference architecture.",
 };
 
