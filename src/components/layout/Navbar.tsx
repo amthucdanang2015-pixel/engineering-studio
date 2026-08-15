@@ -133,7 +133,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className=" font-black uppercase tracking-wider text-stone-900 hover:text-stone-700 transition-colors font-sans"
             >
               <span className="text-xs sm:text-[20px]">HEXACAR</span>
-              <p className="text-[10px] tracking-[0.4em] text-[#82817e]">SIMULATOR</p>
+              <p className="text-[8px] sm:text-[10px] tracking-[0.4em] text-[#82817e]">SIMULATOR</p>
             </Link>
             {vehicleName && (
               <>
@@ -255,8 +255,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div>
               <div className="flex items-center justify-between p-4 border-b border-[#e8e2d5]">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-md bg-stone-900 text-white shadow-xs">
-                    <img src="/images/favicon.ico" alt="" className="h-3.5 w-3.5" />
+                  <div className="flex h-8 w-8 items-center justify-center rounded-md text-white shadow-xs">
+                    <img src="/images/favicon.ico" alt="" className="h-6 w-6" />
                   </div>
                   <div>
                     <h2 className="text-xs font-black uppercase tracking-wider text-stone-900">
