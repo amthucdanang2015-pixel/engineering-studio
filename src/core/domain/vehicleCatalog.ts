@@ -20,7 +20,7 @@ export const VEHICLE_CATALOG: VehicleCatalogItem[] = [
   //   type: "Electric Vehicle",
   //   description:
   //     "A compact electric rally hatch designed for agile handling with a lightweight chassis, responsive electric powertrain, and performance-focused body.",
-  //   modelPath: "/models/sportster_custom_ready.glb",
+  //   modelPath: "/models/v.glb",
   //   screenshotPath: "/images/free_1975_porsche_911_930_turbo.png",
   //   specs: {
   //     engine: "Dual-Motor EV",

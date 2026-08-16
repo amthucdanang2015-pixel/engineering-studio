@@ -1,209 +1,207 @@
 "use client";
 
-import React from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Gauge, Wind, Activity, Zap, Car, ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
+import {
+  Gauge,
+  Zap,
+  Car,
+  Sparkles,
+  Box,
+  RotateCcw,
+} from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
-import { getSavedVehicleBuilds } from "@/core/state/savedBuilds";
-import { getVehicleCatalogItem } from "@/core/domain/vehicleCatalog";
-import { Garage3DPreview } from "@/features/garage/components/Garage3DPreview";
+import { getSavedVehicleBuilds, type SavedVehicleBuild } from "@/core/state/savedBuilds";
+import { getVehicleCatalogItem, VEHICLE_CATALOG } from "@/core/domain/vehicleCatalog";
+import {
+  VehicleTestSimulator,
+  type LiveTelemetry,
+  type SimulationStage,
+} from "./VehicleTestSimulator";
+import { TestHUD, type TestHUDHandle } from "./TestHUD";
+import { TestResultsOverlay } from "./TestResultsOverlay";
+import { calculateVehicleTelemetry } from "../utils/telemetryCalculator";
 
 export const TestView: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const buildIdParam = searchParams.get("buildId");
+  const vehicleParam = searchParams.get("vehicle");
 
-  const savedBuilds = getSavedVehicleBuilds();
-  const activeBuild = buildIdParam ? savedBuilds.find((b) => b.id === buildIdParam) : null;
-  const activeBaseVehicle = activeBuild ? getVehicleCatalogItem(activeBuild.baseVehicleId) : null;
+  const [mounted, setMounted] = useState(false);
+  const [savedBuilds, setSavedBuilds] = useState<SavedVehicleBuild[]>([]);
+  const hudRef = useRef<TestHUDHandle>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    setSavedBuilds(getSavedVehicleBuilds());
+  }, []);
+
+  // Retrieve saved build and vehicle definition
+  const activeBuild = useMemo(() => {
+    if (!mounted) return null;
+    if (buildIdParam) {
+      const found = savedBuilds.find((b) => b.id === buildIdParam);
+      if (found) return found;
+    }
+    if (vehicleParam) {
+      const byVehicle = savedBuilds.find((b) => b.baseVehicleId === vehicleParam);
+      if (byVehicle) return byVehicle;
+    }
+    return savedBuilds[0] || null;
+  }, [mounted, buildIdParam, vehicleParam, savedBuilds]);
+
+  const activeBaseVehicle = useMemo(() => {
+    const targetVehicleId = vehicleParam || activeBuild?.baseVehicleId || VEHICLE_CATALOG[0].id;
+    return getVehicleCatalogItem(targetVehicleId);
+  }, [vehicleParam, activeBuild]);
+
+  // Derived telemetry metrics from build/vehicle specs
+  const telemetryData = useMemo(() => {
+    return calculateVehicleTelemetry(activeBaseVehicle, activeBuild);
+  }, [activeBaseVehicle, activeBuild]);
+
+  // Simulation state (only updated on major stage changes, never per-frame)
+  const [simulationStage, setSimulationStage] = useState<SimulationStage>("LOADING");
+  const [loading, setLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [replayCount, setReplayCount] = useState(0);
+
+  // High-performance 60fps direct DOM update via hudRef — zero React re-render overhead
+  const handleTelemetryUpdate = useCallback((data: LiveTelemetry) => {
+    hudRef.current?.update(data);
+  }, []);
+
+  const handleStageChange = useCallback((stage: SimulationStage) => {
+    setSimulationStage(stage);
+  }, []);
+
+  const handleLoadingProgress = useCallback((isLoading: boolean, progress: number) => {
+    setLoading(isLoading);
+    setLoadingProgress(progress);
+  }, []);
+
+  const handleReplay = useCallback(() => {
+    setReplayCount((prev) => prev + 1);
+  }, []);
+
+  const displayBuildId = mounted ? (activeBuild?.id || activeBaseVehicle.id) : activeBaseVehicle.id;
+  const buildTitle = mounted && activeBuild?.name
+    ? activeBuild.name
+    : `${activeBaseVehicle.name} Performance Specimen`;
+  const customPartsCount = mounted && activeBuild
+    ? Object.keys(activeBuild.materialOverrides || {}).length
+    : 0;
 
   return (
-    <div className="relative min-h-screen w-full bg-[#f4f6f9] text-slate-900 font-sans flex flex-col justify-between p-4 md:p-6 overflow-y-auto">
-      {/* Top Header Navigation */}
+    <div className="relative min-h-screen lg:h-[100dvh] lg:max-h-[100dvh] w-full bg-[#f4f6f9] text-slate-900 font-sans flex flex-col justify-between p-4 md:p-5 overflow-y-auto lg:overflow-hidden">
+      {/* ── TOP NAVIGATION BAR ────────────────────────────────────── */}
       <Navbar />
 
-      {/* Main Workspace Content */}
-      <div className="flex-1 flex flex-col items-center justify-center my-4">
-        {activeBuild && activeBaseVehicle ? (
-          <div className="w-full max-w-5xl space-y-5">
-            {/* Active Test Build Header Card */}
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-stone-900 text-white font-bold shrink-0 shadow-sm">
-                  <Zap size={22} className="text-[#f95738]" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#f95738] bg-[#f95738]/10 px-2.5 py-0.5 rounded-md border border-[#f95738]/20 font-mono">
-                      ACTIVE TEST SPECIMEN
-                    </span>
-                    <span className="text-xs text-slate-400 font-mono">ID: {activeBuild.id}</span>
-                  </div>
-                  <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">{activeBuild.name}</h2>
-                  <p className="text-xs text-slate-500 font-mono mt-0.5">
-                    Base Model: {activeBaseVehicle.name} · {Object.keys(activeBuild.materialOverrides || {}).length} custom parts
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 w-full sm:w-auto">
-                <button
-                  type="button"
-                  onClick={() => router.push(`/build?vehicle=${activeBuild.baseVehicleId}&buildId=${activeBuild.id}`)}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 py-3 px-5 rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-900 font-extrabold text-xs uppercase tracking-wider transition-all border border-stone-200 cursor-pointer"
-                >
-                  <Car size={15} />
-                  <span>Edit in Build</span>
-                </button>
-              </div>
+      {/* ── MAIN WORKSPACE CONTENT ────────────────────────────────── */}
+      <div className="flex-1 flex flex-col min-h-0 gap-3 sm:gap-4 overflow-visible lg:overflow-hidden">
+        {/* Active Test Build Header Card */}
+        <div className="bg-white rounded-2xl border border-[#e8e2d5] shadow-xs px-4 sm:px-6 py-3.5 shrink-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-stone-900 text-white shrink-0 shadow-xs">
+              <Zap size={18} className="text-[#f95738]" />
             </div>
-
-            {/* 3D Model + Telemetry Workspace */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* 3D Preview */}
-              <div className="lg:col-span-7 h-[360px] sm:h-[420px] relative rounded-3xl overflow-hidden esf-panel p-2 bg-white border border-slate-200 shadow-sm flex flex-col">
-                <div className="flex-1 w-full h-full relative">
-                  <Garage3DPreview
-                    buildId={activeBuild.id}
-                    modelPath={activeBaseVehicle.modelPath}
-                    vehicleName={activeBuild.name}
-                    materialOverrides={activeBuild.materialOverrides}
-                  />
-                  <div className="absolute top-4 left-4 z-10 flex items-center gap-2 bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-slate-200 shadow-sm">
-                    <Sparkles size={14} className="text-[#f95738]" />
-                    <span className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">{activeBaseVehicle.type}</span>
-                  </div>
-                </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-[9px] font-extrabold uppercase tracking-widest text-[#f95738] bg-[#f95738]/10 px-2 py-0.5 rounded-md border border-[#f95738]/20 font-mono">
+                  ACTIVE TEST SPECIMEN
+                </span>
+                <span className="text-[10px] text-stone-400 font-mono">ID: {displayBuildId}</span>
               </div>
-
-              {/* Simulation Suite Cards */}
-              <div className="lg:col-span-5 bg-white rounded-3xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between">
-                <div>
-                  <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-900 mb-1 flex items-center gap-2">
-                    <Gauge size={18} className="text-[#f95738]" />
-                    TELEMETRY & SIMULATION
-                  </h3>
-                  <p className="text-xs text-slate-500 mb-5">Live telemetry feedback for {activeBuild.name}.</p>
-
-                  <div className="space-y-3">
-                    <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Wind size={18} className="text-[#f95738]" />
-                        <div>
-                          <div className="text-xs font-extrabold text-slate-800">Aerodynamic Cd</div>
-                          <div className="text-[10px] text-slate-400 font-mono">Drag Coefficient</div>
-                        </div>
-                      </div>
-                      <span className="text-sm font-extrabold text-slate-900 font-mono">0.28 Cd</span>
-                    </div>
-
-                    <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Activity size={18} className="text-[#f95738]" />
-                        <div>
-                          <div className="text-xs font-extrabold text-slate-800">0-100 km/h</div>
-                          <div className="text-[10px] text-slate-400 font-mono">Acceleration</div>
-                        </div>
-                      </div>
-                      <span className="text-sm font-extrabold text-slate-900 font-mono">3.4 s</span>
-                    </div>
-
-                    <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Zap size={18} className="text-[#f95738]" />
-                        <div>
-                          <div className="text-xs font-extrabold text-slate-800">Dyno Output</div>
-                          <div className="text-[10px] text-slate-400 font-mono">Powertrain Curve</div>
-                        </div>
-                      </div>
-                      <span className="text-sm font-extrabold text-slate-900 font-mono">{activeBaseVehicle.specs.power}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-slate-100 flex items-center justify-between mt-4">
-                  <span className="text-xs text-emerald-600 font-extrabold flex items-center gap-1.5">
-                    <CheckCircle2 size={15} />
-                    <span>Build Ready for Track Test</span>
-                  </span>
-                </div>
-              </div>
+              <h2 className="text-sm sm:text-base font-extrabold text-stone-900 truncate">
+                {buildTitle}
+              </h2>
+              <p className="text-[10px] text-stone-500 font-mono truncate">
+                Base: {activeBaseVehicle.name} · {customPartsCount} custom parts · {activeBaseVehicle.specs.power} · {telemetryData.zeroTo100Formatted} 0-100
+              </p>
             </div>
           </div>
-        ) : (
-          <div className="w-full max-w-4xl bg-white rounded-3xl border border-slate-200 shadow-sm p-8 text-center">
-            <div className="inline-flex h-16 w-16 items-center justify-center rounded-3xl bg-[#f95738]/10 text-[#f95738] border border-[#f95738]/20 mb-4 shadow-sm">
-              <Gauge size={32} />
-            </div>
 
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#f95738] bg-[#f95738]/10 px-3 py-1 rounded-md border border-[#f95738]/20 block w-fit mx-auto mb-3">
-              Testing &amp; Simulation Environment
-            </span>
-
-            <h2 className="text-2xl font-extrabold text-slate-900 mb-3">
-              Vehicle Simulation Suite
-            </h2>
-
-            <p className="text-xs text-slate-600 max-w-xl mx-auto leading-relaxed mb-8">
-              The vehicle testing and dynamics environment allows evaluating aerodynamic drag, cornering telemetry, and powertrain output curves across customized builds. Select a saved build in Garage to test its specific configuration!
-            </p>
-
-            {/* Test modules grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 text-left">
-              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 relative overflow-hidden">
-                <div className="flex items-center gap-2 text-slate-700 font-extrabold text-sm mb-1.5">
-                  <Wind size={18} className="text-[#f95738]" />
-                  <span>Aerodynamic Tunnel</span>
-                </div>
-                <p className="text-xs text-slate-500 leading-relaxed mb-3">
-                  Simulate drag coefficient (Cd) and axle downforce across velocity vectors.
-                </p>
-                <span className="text-[9px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md font-mono">
-                  Coming Soon
-                </span>
-              </div>
-
-              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 relative overflow-hidden">
-                <div className="flex items-center gap-2 text-slate-700 font-extrabold text-sm mb-1.5">
-                  <Activity size={18} className="text-[#f95738]" />
-                  <span>Track Telemetry</span>
-                </div>
-                <p className="text-xs text-slate-500 leading-relaxed mb-3">
-                  Test 0-100 km/h acceleration curves, braking distance, and lateral G-force.
-                </p>
-                <span className="text-[9px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md font-mono">
-                  Coming Soon
-                </span>
-              </div>
-
-              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 relative overflow-hidden">
-                <div className="flex items-center gap-2 text-slate-700 font-extrabold text-sm mb-1.5">
-                  <Zap size={18} className="text-[#f95738]" />
-                  <span>Powertrain Dyno</span>
-                </div>
-                <p className="text-xs text-slate-500 leading-relaxed mb-3">
-                  Analyze torque curves, thermal dissipation, and battery pack output efficiency.
-                </p>
-                <span className="text-[9px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md font-mono">
-                  Coming Soon
-                </span>
-              </div>
-            </div>
-
-            {/* Quick Action Button */}
+          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
             <button
               type="button"
-              onClick={() => router.push("/garage")}
-              className="inline-flex items-center gap-2 py-3.5 px-6 rounded-2xl bg-[#f95738] hover:bg-[#e0482b] text-white font-extrabold text-xs tracking-wider uppercase transition-all shadow-md active:scale-[0.98] group cursor-pointer"
+              onClick={handleReplay}
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 py-2 px-3.5 rounded-xl bg-white border border-stone-200 hover:bg-stone-50 hover:border-stone-300 text-stone-700 font-extrabold text-xs uppercase tracking-wider transition-all shadow-2xs cursor-pointer active:scale-95"
+              title="Restart Test Animation"
             >
-              <Car size={16} />
-              <span>Select Saved Build in Garage</span>
-              <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+              <RotateCcw size={13} className="text-[#f95738]" />
+              <span>Replay</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                router.push(
+                  activeBuild
+                    ? `/build?vehicle=${activeBaseVehicle.id}&buildId=${activeBuild.id}`
+                    : `/build?vehicle=${activeBaseVehicle.id}`
+                )
+              }
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 py-2 px-3.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white font-extrabold text-xs uppercase tracking-wider transition-all shadow-xs cursor-pointer active:scale-95"
+            >
+              <Car size={13} className="text-[#f95738]" />
+              <span>Edit Build</span>
             </button>
           </div>
-        )}
+        </div>
+
+        {/* ── 3D VEHICLE TEST SIMULATOR STAGE ──────────────────────── */}
+        <div className="flex-1 w-full min-h-[380px] sm:min-h-[460px] relative rounded-3xl overflow-hidden border border-[#e8e2d5] bg-[#e8ecf1] shadow-sm flex flex-col">
+          {/* Three.js Proving Grounds Animation Stage */}
+          <VehicleTestSimulator
+            vehicle={activeBaseVehicle}
+            build={activeBuild}
+            telemetryData={telemetryData}
+            onTelemetryUpdate={handleTelemetryUpdate}
+            onStageChange={handleStageChange}
+            onLoadingProgress={handleLoadingProgress}
+            replayTrigger={replayCount}
+          />
+
+          {/* Live Digital Cluster HUD (Driven by hudRef direct DOM updates) */}
+          <TestHUD
+            ref={hudRef}
+            vehicleName={buildTitle}
+            zeroTo100TargetSec={telemetryData.zeroTo100Time}
+            isVisible={true}
+          />
+
+          {/* Results Summary Overlay at Hero / Finish State */}
+          <TestResultsOverlay
+            isOpen={simulationStage === "HERO"}
+            vehicle={activeBaseVehicle}
+            build={activeBuild}
+            telemetry={telemetryData}
+            onReplay={handleReplay}
+          />
+
+          {/* Loading Overlay */}
+          {loading && (
+            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#f7f4ed]/95 backdrop-blur-sm">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#e0564d]/10 text-[#e0564d] border border-[#e0564d]/20 mb-4 shadow-xs">
+                <Box size={28} className="animate-pulse" />
+              </div>
+              <h2 className="text-sm font-bold text-stone-800 uppercase tracking-wider">
+                Preparing Test Proving Grounds · {activeBaseVehicle.name}
+              </h2>
+              <div className="mt-3 w-48 h-1 bg-[#e8e2d5] rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-[#e0564d] rounded-full transition-all duration-300"
+                  style={{ width: `${Math.max(10, Math.round(loadingProgress * 100))}%` }}
+                />
+              </div>
+              <p className="text-xs text-stone-400 mt-2 font-mono">
+                {Math.max(10, Math.round(loadingProgress * 100))}%
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 };
-
