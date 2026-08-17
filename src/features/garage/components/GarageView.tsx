@@ -100,6 +100,7 @@ export const GarageView: React.FC = () => {
                   modelPath={selectedBaseVehicle.modelPath}
                   vehicleName={selectedBuild.name}
                   materialOverrides={selectedBuild.materialOverrides}
+                  vehicleCustomization={selectedBuild.vehicleCustomization}
                 />
 
                 {/* Badge overlay on top of 3D preview */}

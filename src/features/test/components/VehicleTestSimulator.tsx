@@ -178,6 +178,7 @@ export const VehicleTestSimulator: React.FC<VehicleTestSimulatorProps> = ({
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const assetManagerRef = useRef<AssetManager | null>(null);
   const carGroupRef = useRef<THREE.Group | null>(null);
+  const wheelPivotsRef = useRef<THREE.Group[]>([]);
   const wheelMotionDiscsRef = useRef<WheelMotionBlurItem[]>([]);
   const envTextureRef = useRef<THREE.Texture | null>(null);
   const animFrameIdRef = useRef<number | null>(null);
@@ -214,6 +215,10 @@ export const VehicleTestSimulator: React.FC<VehicleTestSimulatorProps> = ({
       carGroupRef.current.position.set(0, 0, 0);
       carGroupRef.current.rotation.set(0, 0, 0);
     }
+
+    wheelPivotsRef.current.forEach((pivot) => {
+      pivot.rotation.x = 0;
+    });
 
     wheelMotionDiscsRef.current.forEach(({ mesh, material }) => {
       mesh.rotation.z = 0;
@@ -266,6 +271,7 @@ export const VehicleTestSimulator: React.FC<VehicleTestSimulatorProps> = ({
       if (carGroupRef.current) {
         scene.remove(carGroupRef.current);
         carGroupRef.current = null;
+        wheelPivotsRef.current = [];
         wheelMotionDiscsRef.current = [];
       }
 
@@ -298,7 +304,7 @@ export const VehicleTestSimulator: React.FC<VehicleTestSimulatorProps> = ({
         mesh.receiveShadow = false;
       });
 
-      // 4. Attach Dynamic Rotational Wheel Motion Discs to the 4 wheel positions
+      // 4. Group 3D Wheel Meshes & Attach Dynamic Rotational Wheel Pivots & Motion Discs
       // Group wheel meshes by corner to identify exact wheel axle centers
       const cornerGroups = new Map<string, THREE.Mesh[]>();
 
@@ -308,10 +314,11 @@ export const VehicleTestSimulator: React.FC<VehicleTestSimulatorProps> = ({
           (name.includes("wheel") ||
             name.includes("tire") ||
             name.includes("tyre") ||
-            name.includes("rim") ||
+            (name.includes("rim") && !name.includes("trim")) ||
             name.includes("spoke") ||
             name.includes("hub")) &&
           !name.includes("steering") &&
+          !name.includes("trim") &&
           !name.includes("arch") &&
           !name.includes("well") &&
           !name.includes("caliper") &&
@@ -320,7 +327,7 @@ export const VehicleTestSimulator: React.FC<VehicleTestSimulatorProps> = ({
 
         if (!isWheelPart) return;
 
-        mesh.geometry.computeBoundingBox();
+        if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
         const box = mesh.geometry.boundingBox;
         if (!box) return;
 
@@ -336,17 +343,35 @@ export const VehicleTestSimulator: React.FC<VehicleTestSimulatorProps> = ({
 
       const wheelSpinTex = createWheelSpinTexture();
       const motionDiscs: WheelMotionBlurItem[] = [];
+      const wheelPivots: THREE.Group[] = [];
+
+      // Find the direct parent node containing the meshes (e.g. world or model)
+      const firstMesh = asset.meshes[0];
+      const modelParent = firstMesh?.parent || asset.pivot;
 
       cornerGroups.forEach((cornerMeshes, cornerKey) => {
         if (cornerMeshes.length === 0) return;
 
         const cornerBox = new THREE.Box3();
         cornerMeshes.forEach((m) => {
+          if (!m.geometry.boundingBox) m.geometry.computeBoundingBox();
           if (m.geometry.boundingBox) cornerBox.union(m.geometry.boundingBox);
         });
-        const center = cornerBox.getCenter(new THREE.Vector3());
+        const localCenter = cornerBox.getCenter(new THREE.Vector3());
         const size = cornerBox.getSize(new THREE.Vector3());
         const diameter = Math.max(0.35, Math.min(size.y, size.z) * 0.98);
+
+        // Dedicated 3D Wheel Rotational Pivot Group centered at wheel axle in model coordinates
+        const wheelPivot = new THREE.Group();
+        wheelPivot.name = `WheelPivot_${cornerKey}`;
+        wheelPivot.position.copy(localCenter);
+        modelParent.add(wheelPivot);
+
+        cornerMeshes.forEach((mesh) => {
+          mesh.position.set(-localCenter.x, -localCenter.y, -localCenter.z);
+          mesh.rotation.set(0, 0, 0);
+          wheelPivot.add(mesh);
+        });
 
         const isRight = cornerKey.endsWith("_R");
         const discMat = new THREE.MeshBasicMaterial({
@@ -363,21 +388,23 @@ export const VehicleTestSimulator: React.FC<VehicleTestSimulatorProps> = ({
 
         if (isRight) {
           discMesh.rotation.y = Math.PI / 2;
-          discMesh.position.set(center.x + 0.02, center.y, center.z);
+          discMesh.position.set(0.02, 0, 0);
         } else {
           discMesh.rotation.y = -Math.PI / 2;
-          discMesh.position.set(center.x - 0.02, center.y, center.z);
+          discMesh.position.set(-0.02, 0, 0);
         }
 
-        // Add disc overlay directly into asset.pivot so it scales & moves seamlessly with the car
-        asset.pivot.add(discMesh);
+        wheelPivot.add(discMesh);
         motionDiscs.push({
           mesh: discMesh,
           material: discMat,
           isRightSide: isRight,
         });
+
+        wheelPivots.push(wheelPivot);
       });
 
+      wheelPivotsRef.current = wheelPivots;
       wheelMotionDiscsRef.current = motionDiscs;
 
       // 5. Apply User Customizations from Saved Build
@@ -891,13 +918,21 @@ export const VehicleTestSimulator: React.FC<VehicleTestSimulatorProps> = ({
           camera.lookAt(-0.55, 0.32, carZ + 0.2);
         }
 
-        // Animate Wheel Rotational Motion Blur Discs
+        // Animate 3D Wheel Rotations & Motion Blur
         const speedMps = (speedKmH * 1000) / 3600;
-        const wheelSpinSpeed = (speedMps * dt) / 0.28;
+        const wheelRadius = 0.20; // 0.20m wheel radius
+        const wheelRotationAngle = (speedMps * dt) / wheelRadius;
         const targetOpacity = Math.min(0.68, (speedKmH / 65) * 0.68);
 
+        // Physically rotate all 4 3D wheels forward around their X axle
+        wheelPivotsRef.current.forEach((pivot) => {
+          pivot.rotation.x += wheelRotationAngle;
+        });
+
+        // Rotate high-speed spoke blur texture
+        const discSpinSpeed = (speedMps * dt) / 0.28;
         wheelMotionDiscsRef.current.forEach(({ mesh, material, isRightSide }) => {
-          mesh.rotation.z += isRightSide ? -wheelSpinSpeed : wheelSpinSpeed;
+          mesh.rotation.z += isRightSide ? -discSpinSpeed : discSpinSpeed;
           material.opacity = targetOpacity;
         });
 
